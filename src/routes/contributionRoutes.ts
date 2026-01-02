@@ -1,12 +1,14 @@
 import express from 'express';
 import { validateBatchInput } from '../middlewares/validateBody';
-import { contributionController } from '../controllers/contributionController';
-import { scrapperAuthentication } from '../middlewares/protected';
+import { handleBatchPublication, handleBlocks, verificationAndCaching } from '../controllers/contributionController';
 
 const router = express.Router();
 
-router.post('/batch', scrapperAuthentication, validateBatchInput, contributionController);
-// Add a separate post request for contribution sign up.
+router.post('/batch', 
+    handleBlocks, 
+    validateBatchInput,
+    handleBatchPublication
+);
 
 export default router;
 

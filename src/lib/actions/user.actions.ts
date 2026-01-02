@@ -4,6 +4,55 @@ import { Query } from "node-appwrite";
 import { randomBytes } from "crypto";
 import { ID } from "node-appwrite";
 
+export const sessionExists = async (
+    id: string,
+    col: string
+): Promise<boolean> => {
+    try {
+        const query = await database.listRows({
+            databaseId: appwriteConfig.databaseId,
+            tableId: appwriteConfig.sessionsTableId,
+            queries: [Query.equal(col, id)]
+        });
+
+        if(query.total === 0) return false;
+        return true;
+    } catch (err){
+        console.log(
+            // @ts-ignore BAD FIX!
+            err?.message ?? err);
+        return true;
+    }
+}
+
+export const revokeSession = async (
+    sessionId: string
+) => {
+    try {
+        const query = await database.deleteRows({
+            databaseId: appwriteConfig.databaseId,
+            tableId: appwriteConfig.sessionsTableId,
+            queries: [Query.equal('sessionId', sessionId)]
+        });
+
+        if(query.total === 0){
+            return {
+                success: false, 
+                message: "No session found.",
+                code: 400
+            };
+        }
+
+        return {success: true, status: 200};
+    } catch (err) {
+        return {
+            success: false, 
+            message: "Server error",
+            code: 500
+        };
+    }
+}
+
 export const createSession = async (
     uid: string | undefined
 ) => {
@@ -56,54 +105,9 @@ export const createSession = async (
     };
 }
 
-export const revokeSession = async (
-    sessionId: string
-) => {
-    try {
-        const query = await database.deleteRows({
-            databaseId: appwriteConfig.databaseId,
-            tableId: appwriteConfig.sessionsTableId,
-            queries: [Query.equal('sessionId', sessionId)]
-        });
 
-        if(query.total === 0){
-            return {
-                success: false, 
-                message: "No session found.",
-                code: 400
-            };
-        }
 
-        return {success: true, status: 200};
-    } catch (err) {
-        return {
-            success: false, 
-            message: "Server error",
-            code: 500
-        };
-    }
-}
-
-export const sessionExists = async (
-    id: string,
-    col: string
-): Promise<boolean> => {
-    try {
-        const query = await database.listRows({
-            databaseId: appwriteConfig.databaseId,
-            tableId: appwriteConfig.sessionsTableId,
-            queries: [Query.equal(col, id)]
-        });
-
-        if(query.total === 0) return false;
-        return true;
-    } catch (err){
-        console.log(
-            // @ts-ignore BAD FIX!
-            err?.message ?? err);
-        return true;
-    }
-}
+// ------- Users -------
 
 export const createUsername = async (
     username: string

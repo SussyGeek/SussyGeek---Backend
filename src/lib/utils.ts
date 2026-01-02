@@ -3,6 +3,7 @@ import { Institution } from "../types/appwrite";
 import { BatchBody, StudentBody } from "../types/body";
 
 
+// FIX!
 export const prepInstitutionObject = (
     name: string,
     slug: string,
@@ -12,7 +13,7 @@ export const prepInstitutionObject = (
         state: string,
         country: string
     }
-): Institution => (
+): Partial<Institution> => (
     {
         name,
         slug,
@@ -22,9 +23,14 @@ export const prepInstitutionObject = (
         score: 0,
         students: registeredGeeks ?? 0,
         scrappedStudents: 0,
-        status: "Incomplete"
+        status: "Incomplete",
     }
 );
+
+export const SECONDSFOR = {
+  HalfHour: 1800,
+  Hour: 3600
+};
 
 export const omitDBInfo = (
   rows: Array<Record<string, any>>,  // This is stupid fix this later.
@@ -71,3 +77,33 @@ export const extractUsernames = (
   
   return usernames;
 }
+
+type errorInstanceType = {
+  success: false,
+  code: number,
+  message: string
+};
+
+export const handleError = (
+  source: string,
+  code: number,
+  dataObject: string
+): errorInstanceType => {
+  
+  let message = code === 404 ?
+    `${dataObject} not found.` :
+    'Server error';
+
+  message = code === 409 ?
+    `High contention. Try again.` :
+    'Server error';
+
+  console.log(`[${source}]: ${message}`);
+  return {
+    success: false,
+    code,
+    message,
+  };
+}
+
+export const sleep = (s: number) => new Promise<void>(resolve => setTimeout(resolve, s * 1000));

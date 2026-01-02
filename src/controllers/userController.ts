@@ -24,9 +24,7 @@ export const Login = async (req: Request, res: Response) => {
 
         const user = await createUsername(username);
         if(!(user?.success)) {
-            return res.
-            status(user.code).
-            json({
+            return res.status(user.code).json({
                 success: false,
                 message: user?.message
             });
@@ -34,9 +32,7 @@ export const Login = async (req: Request, res: Response) => {
         
         const session = await createSession(user?.uid);
         if(!(session?.success)){
-            return res.
-            status(session.code).
-            json({
+            return res.status(session.code).json({
                 success: false,
                 message: session?.message
             });

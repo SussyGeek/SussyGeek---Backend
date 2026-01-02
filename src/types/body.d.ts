@@ -1,22 +1,22 @@
 export interface InstitutionBody {
-    name: string;
-    slug: string;
-    studentCount: number;
-    city: string;
-    country: string;
-    state: string;
+    name: string,
+    slug: string,
+    studentCount: number,
+    city: string,
+    country: string,
+    state: string,
 }
 
 export interface StudentBody {
-    $id: string;
-    name: string;
-    username: string;
-    solved: number;
-    score: number;
-    instituteId: string;
-    rank: mumber;
-    streak: number;
-    difficultySolved?: number[];
+    $id: string,
+    name: string,
+    username: string,
+    solved: number,
+    score: number,
+    instituteId: string,
+    rank: mumber,
+    streak: number,
+    difficultySolved?: number[],
     branch?: string
 }
 
@@ -31,6 +31,12 @@ export interface BatchBody {
     streak: number,
     longestStreak: number,
     scrapedAt: string
+}
+
+export interface ContributorReqBody {
+    instituteId: string, 
+    username: string,
+    students?: BatchBody[]
 }
 
 export interface GFGUser {

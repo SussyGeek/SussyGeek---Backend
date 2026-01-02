@@ -7,43 +7,67 @@ import { getAllUsernames, getTotalStudentCount } from "./geeksforgeeks.actions";
 
 export const addStudentsBatch = async (
     students: StudentBody[],
-    limit: number // Will be used later for concurrent institutional scrapping.
+    instituteId: string
 ) => {
+    try {
+        const redis = await getRedis();
 
-    try{
+        const rows = [];
+        const hashData: Record<string, string> = {};
+        const scoreZ = [];
+        const streakZ = [];
+        const solvedZ = [];
+
+        for (const s of students) {
+            rows.push({
+                $id: s.$id,
+                instituteId: s.instituteId,
+                branch: s.branch ?? null,
+                username: s.username,
+                name: s.name
+            });
+
+            const stats = JSON.stringify({
+                score: s.score,
+                solved: s.solved,
+                streak: s.streak
+            });
+
+            hashData[s.username] = stats;
+            scoreZ.push({ score: s.score, value: s.username });
+            streakZ.push({ score: s.streak, value: s.username });
+            solvedZ.push({ score: s.solved, value: s.username });
+        }
+
         const res = await database.createRows({
             databaseId: appwriteConfig.databaseId,
             tableId: appwriteConfig.studentTableId,
-            rows: students
+            rows
         });
 
-        if(res?.total === 0) return {
-            success: false, 
-            code: 500
-        };
+        if (res.total <= 0) {
+            throw new Error("No rows inserted");
+        }
 
-        if(res?.total > 0) return {
-            success: true, 
-            code: 200
-        };
+        await redis
+            .multi()
+            .hSet(`institute:${instituteId}:data`, hashData)
+            .zAdd(`institute:${instituteId}:scores`, scoreZ)
+            .zAdd(`institute:${instituteId}:streaks`, streakZ)
+            .zAdd(`institute:${instituteId}:solved`, solvedZ)
+            .exec();
 
+        return { success: true, code: 200 };
+
+    } catch (err: any) {
+        console.log("[addStudentsBatch]:", err?.message ?? err);
         return {
             success: false,
-            code: 500
-        };
-
-    } catch(err){
-        console.log("[addStudentsBatch]: Error adding student batch: ",
-            // @ts-ignore
-            err?.message ?? err)
-        return {
-            success: false, 
-            // @ts-ignore // FIX!
             message: err?.message ?? null,
             code: 500
-        }
+        };
     }
-}
+};
 
 export const cacheStudentUsernames = async (
     instituteId: string
