@@ -5,7 +5,7 @@ import { timeUnits } from "../../utils/timeUtils";
 import { BLOCK, BLOCK_STATE, ID_UNASSIGNED, STUDENT_BATCH_SIZE } from "../../data/params";
 import { ContributionRow } from "../../types/models/contribution";
 import UserService from "../user/user.service";
-import { Institute } from "../../types/models/institute";
+import { InstituteRow } from "../../types/models/institute";
 import InstituteRepository from "../institute/institute.repository";
 import { randomSleep } from "../../utils/timeUtils";
 import { getRandomIdx } from "../../utils/randomIdxGenerator";
@@ -247,7 +247,7 @@ const ContributionService = {
     },
     handleBlocks: async (
         contributor: ContributionRow,
-        institute: Institute,
+        institute: InstituteRow,
         expiredRows: ContributionRow[]
     ) => {
         let startingPage, leaseMessage;
@@ -339,7 +339,7 @@ const ContributionService = {
     },
     handleBatchPublication: async (
         username: string,
-        institute: Institute,
+        institute: InstituteRow,
         students: BatchBody[],
         startingPage: number,
         seconds: number,

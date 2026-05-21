@@ -1,6 +1,6 @@
 import { Models } from "node-appwrite"
 
-export interface InstituteRow extends Models.DefaultRow {
+export type InstituteRow = {
   name: string,
   slug: string,
   city: string | null,
@@ -13,4 +13,4 @@ export interface InstituteRow extends Models.DefaultRow {
   status: "Complete" | "Incomplete" | "Scrapping",
   blocks: number[],
   blocksVersion: number,
-}
+} & Models.DefaultRow
