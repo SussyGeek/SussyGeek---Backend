@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "main": "src/server.ts",
   "scripts": {
-    "start": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -17,7 +19,8 @@
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "node-appwrite": "^20.3.0",
-    "redis": "^5.10.0"
+    "redis": "^5.10.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.10",

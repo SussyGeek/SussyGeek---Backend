@@ -1,8 +1,8 @@
-export const metaEntires = [
-    'totalscore', // totalScore
-    'problemssolved', // problemsSolved
-    'totalstudents', // totalStudents
-    'institutions' // --
+export const metaFields = [
+    'totalScore', // totalScore
+    'totalProblems', // problemsSolved
+    'totalStudents', // totalStudents
+    'totalInstitutions' // --
 ];
 
 export const batchDict = {

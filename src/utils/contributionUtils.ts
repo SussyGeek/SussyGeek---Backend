@@ -1,0 +1,73 @@
+import { batchDict } from "../data/meta";
+import { BatchBody, StudentBody } from "../types/body";
+import { StudentRow } from "../types/models/student";
+
+export const prepBatchList = (
+  students: BatchBody[],
+  instituteId: string
+): StudentBody[] => {
+
+  let batch: StudentBody[] = [];
+
+  for (const student of students) {
+
+    let transformedStudent: Partial<StudentBody> = { instituteId };
+
+    for (const [beforeKey, afterKey] of Object.entries(batchDict)) {
+      transformedStudent[afterKey as keyof StudentBody] = student[beforeKey as keyof BatchBody];
+    }
+
+    batch.push(transformedStudent as StudentBody);
+  }
+
+  return batch;
+}
+
+export const aggregateScore = (batch: StudentBody[]) => {
+  const studentRows: Partial<StudentRow>[] = [];
+  const scoreArr: redisHashObjectType[] = [];
+  const streakArr: redisHashObjectType[] = [];
+  const solvedArr: redisHashObjectType[] = [];
+
+  // Don't know why this is used. It was in original file, so I kept it.
+  // TODO: Whether useless or not.
+  const metaData = {
+    score: 0,
+    streak: 0,
+    students: 0
+  };
+
+  const hashData: Record<string, string> = {};
+
+  batch.forEach(student => {
+    studentRows.push({
+      $id: student.$id,
+      instituteId: student.instituteId,
+      branch: student.branch ?? null,
+      username: student.username,
+      name: student.name
+    });
+
+    const stats = JSON.stringify({
+      score: student.score,
+      solved: student.solved,
+      streak: student.streak
+    });
+
+    hashData[student.username] = stats;
+
+    scoreArr.push({ score: student.score, value: student.username });
+    streakArr.push({ score: student.streak, value: student.username });
+    solvedArr.push({ score: student.solved, value: student.username });
+  });
+
+  return {
+    rows: studentRows,
+    hashScores: hashData,
+    counterArrays: {
+      scoreArr,
+      streakArr,
+      solvedArr
+    }
+  }
+}

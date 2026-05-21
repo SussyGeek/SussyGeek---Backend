@@ -1,0 +1,68 @@
+import { Request, Response, NextFunction } from "express";
+import InstituteService from "./institute.service";
+
+const instituteController = {
+    addInstitute: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const {
+                name,
+                slug,
+                studentCount,
+                city,
+                country,
+                state
+            }: instituteInputBodyType = req.body;
+
+            await InstituteService.addInstitute({
+                name,
+                slug,
+                registeredGeeks: studentCount,
+                location: { city, country, state }
+            });
+
+            return res.json({
+                success: true
+            });
+
+        } catch (err) {
+            next(err);
+        }
+    },
+    getInstitute: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const {
+                id,
+                page,
+                name,
+                limit,
+            } = req.query as instituteFetchQueryTypes;
+            // @ts-ignore TODO: Handle this at validation layer.
+            const pageInt = parseInt(page, '10');
+            // @ts-ignore. TODO: Fix this TS error.
+            const limitInt = parseInt(limit, '10');
+            const offset = (pageInt - 1) * limitInt;
+            const institutes = await InstituteService.getInstitute(
+                id, name, pageInt, limitInt, offset
+            );
+
+            return res.json({
+                success: true,
+                message: "Fetched",
+                data: institutes.rows
+            });
+        } catch (err) {
+            next(err);
+        }
+    },
+    updateStudentCount: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const result = await InstituteService.updateTotalStudents(id);
+            return res.json(result);
+        } catch (err) {
+            next(err);
+        }
+    }
+};
+
+export default instituteController;

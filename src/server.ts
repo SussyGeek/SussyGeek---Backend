@@ -2,11 +2,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
-import instituteRoutes from "./routes/instituteRoutes"
-import metaRoutes from "./routes/metaRoutes";
-import userRoutes from "./routes/userRoutes";
-import contributionRoutes from "./routes/contributionRoutes";
-import devRoutes from "./routes/dev/devRoutes";
+import appRoutes from "./routes";
+import ErrorHandler from "./middlewares/error.middleware";
 
 dotenv.config();
 
@@ -26,13 +23,9 @@ app.use(cors(
 app.use(express.json());
 
 // Routes
-app.use('/api/v1/institute', instituteRoutes);
-app.use('/api/v1/metadata', metaRoutes);
-app.use('/api/v1/user', userRoutes);
-app.use('/api/v1/contribute', contributionRoutes)
+app.use('/api/v1', appRoutes);
 
-// Dev routes
-app.use('/api/v1/dev', devRoutes);
+app.use(ErrorHandler);
 
 app.listen(PORT, () => {
     console.log(`Listening to ${PORT}`)

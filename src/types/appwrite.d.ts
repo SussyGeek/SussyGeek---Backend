@@ -1,5 +1,10 @@
 import { Models } from "node-appwrite"
 
+export type AppwriteRes<T> = {
+  total: number,
+  Row: T[]
+};
+
 export interface Student {
   $id: string,
   name: string,
@@ -15,16 +20,6 @@ export interface Student {
   $updatedAt: string
 }
 
-export interface AppwriteStudent {
-  $id: string,
-  name: string,
-  username: string,
-  instituteId: string,
-  branch?: string,
-  $createdAt: string,
-  $updatedAt: string
-}
-
 export interface Institution {
   $id: string,
   name: string,
@@ -35,6 +30,7 @@ export interface Institution {
   score: number,
   students: number,
   scrappedStudents: number,
+  problemsSolved: number,
   status: "Complete" | "Incomplete" | "Scrapping",
   blocks: number[],
   blocksVersion: number,
