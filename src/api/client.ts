@@ -1,5 +1,6 @@
 import axios from "axios";
 import { ApiError } from "../errors/ApiError";
+import { GfgApiClient } from "../types/gfg_api";
 
 const gfgClient = axios.create({
     baseURL: process.env.GEEKSFORGEEKS_BASE_URL,

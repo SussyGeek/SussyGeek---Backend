@@ -1,18 +1,18 @@
 // Used in institute.repository.ts for redis
 
-type redisHashObjectType = { 
+export type redisHashObjectType = { 
     score: number,
     value: string
 };
 
 // unused for now.
-type redisStatsObjectType = {
+export type redisStatsObjectType = {
     score: number,
     solved: number,
     streak: number
 };
 
-type redisScoresObj = {
+export type redisScoresObj = {
     counterArrays: {
         scoreArr: redisHashObjectType[];
         streakArr: redisHashObjectType[];
@@ -24,7 +24,7 @@ type redisScoresObj = {
 
 // Used in meta.repository.ts
 
-type metaFieldTypes = {
+export type metaFieldTypes = {
     totalProblems: number,
     totalScore: number,
     totalStudents: number

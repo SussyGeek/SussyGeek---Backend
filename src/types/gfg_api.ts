@@ -1,4 +1,4 @@
-type GFGStudentStats = {
+export type GFGStudentStats = {
   user_id: number;
   handle: string;
   coding_score: number;
@@ -6,7 +6,7 @@ type GFGStudentStats = {
   potd_longest_streak: number;
 };
 
-type GFGRes = {
+export type GFGRes = {
   page_size: number;
   count: number;
   next: string | null;
@@ -14,6 +14,6 @@ type GFGRes = {
   results: GFGStudentStats[];
 };
 
-type GfgApiClient = {
+export type GfgApiClient = {
   get<T>(url: string, config?: any): Promise<T>;
 };

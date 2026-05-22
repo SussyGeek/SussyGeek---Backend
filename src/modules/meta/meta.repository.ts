@@ -3,6 +3,7 @@ import { appwriteConfig } from "../../database/appwrite/config";
 import { database } from "../../database/appwrite/instance";
 import { metaFields } from "../../data/meta";
 import { getRedis } from "../../database/redis/instance";
+import { metaFieldTypes, redisScoresObj } from "../../types/repo";
 
 const MetaRepository = {
     getAllFields: async (): Promise<Models.RowList<Models.DefaultRow>> => {

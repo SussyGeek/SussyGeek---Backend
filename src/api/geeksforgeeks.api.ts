@@ -1,4 +1,5 @@
 import { GfgClient } from "./client";
+import { GFGRes } from "../types/gfg_api";
 
 const GeeksForGeeksAPI = {
     getTotalStudentCount: async (instituteId: string) => {

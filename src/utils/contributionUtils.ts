@@ -1,7 +1,7 @@
 import { batchDict } from "../data/meta";
 import { BatchBody, StudentBody } from "../types/body";
 import { StudentRow } from "../types/models/student";
-
+import { redisHashObjectType } from "../types/repo";
 export const prepBatchList = (
   students: BatchBody[],
   instituteId: string
