@@ -2,20 +2,24 @@ import { Request, Response, NextFunction } from "express"
 
 const UserMiddleware = {
     hasSession: (req: Request, res: Response, next: NextFunction) => {
-        const sessionID = req.cookies?.sessionId;
+        const authHeader = req.headers?.authorization;
+        const sessionId = authHeader?.split(' ')[1];
 
-        if (!sessionID || sessionID.length !== 20) {
+        if (!sessionId || sessionId.length !== 20) {
             return res.status(403).json({
                 success: false,
                 message: "No user logged in."
             });
         }
+
+        res.locals.from.middlewares.hasSession = { sessionId };
         next();
     },
     hasNoSession: (req: Request, res: Response, next: NextFunction) => {
-        const sessionID = req.cookies?.sessionId;
+        const authHeader = req.headers?.authorization;
+        const sessionId = authHeader?.split(' ')[1];
 
-        if (sessionID) {
+        if (sessionId) {
             return res.status(409).json({
                 success: false,
                 message: "You're already logged in."

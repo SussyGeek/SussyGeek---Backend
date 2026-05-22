@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import cookieParser from "cookie-parser";
 import appRoutes from "./routes";
 import ErrorHandler from "./middlewares/error.middleware";
 
@@ -13,7 +12,6 @@ const app = express();
 
 // Configuration
 app.set('trust proxy', 1);
-app.use(cookieParser());
 app.use(cors(
     {
         origin: process.env.ORIGIN_URL,

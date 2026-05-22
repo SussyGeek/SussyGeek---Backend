@@ -141,9 +141,8 @@ const ContributionController = {
     },
     stopContribution: async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { sessionId } = req.cookies;
             const { instituteId } = req.params;
-            const { username } = res.locals.from.middlewares.handleAuth;
+            const { username, sessionId } = res.locals.from.middlewares.handleAuth;
 
             const result = await ContributionService.stopContribution(
                 username,

@@ -5,7 +5,9 @@ import { ApiError } from "../errors/ApiError";
 
 export const handleAuth = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const sessionId = req.cookies?.sessionId;
+        const authHeader = req.headers.authorization;
+        const sessionId = authHeader?.split(' ')[1];
+
         if (!sessionId || sessionId.length !== 20)
             throw new ApiError(403, "Session invalid. Please login.");
 
@@ -17,7 +19,8 @@ export const handleAuth = async (req: Request, res: Response, next: NextFunction
 
         res.locals.from.middlewares.handleAuth = {
             username: userRow.username,
-            userState: userRow.state
+            userState: userRow.state,
+            sessionId: sessionId
         }
         next();
     } catch (err) {
