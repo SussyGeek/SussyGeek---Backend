@@ -12,6 +12,7 @@ const PORT = process.env.PORT;
 const app = express();
 
 // Configuration
+app.use('trust proxy', 1);
 app.use(cookieParser());
 app.use(cors(
     {
