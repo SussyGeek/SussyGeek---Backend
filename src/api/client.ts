@@ -4,7 +4,7 @@ import { GfgApiClient } from "../types/gfg_api";
 
 const gfgClient = axios.create({
     baseURL: process.env.GEEKSFORGEEKS_BASE_URL,
-    timeout: 15000,
+    timeout: 45000,
     withCredentials: false,
 });
 
