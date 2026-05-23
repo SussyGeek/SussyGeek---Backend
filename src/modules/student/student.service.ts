@@ -1,6 +1,7 @@
 import GeeksForGeeksAPI from "../../api/geeksforgeeks.api";
 import { BatchBody } from "../../types/body";
 import { StudentRow } from "../../types/models/student";
+import InstituteService from "../institute/institute.service";
 import StudentRepository from "./student.repository";
 
 const StudentService = {
@@ -13,7 +14,8 @@ const StudentService = {
         const usernames = await GeeksForGeeksAPI.getUsernamesByInstitute(instituteId, count);
 
         await StudentRepository.redisAddUsernamesToInstituteSet(instituteId, usernames);
-        return { success: true };
+        const institute = await InstituteService.updateUserCacheStatus(instituteId, true);
+        return { success: true, institute };
     },
     isBatchValid: async (instituteId: string, students: BatchBody[]) => {
         const usernames = students.map(s => s.username);

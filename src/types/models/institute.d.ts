@@ -13,4 +13,5 @@ export type InstituteRow = {
   status: "Complete" | "Incomplete" | "Scrapping",
   blocks: number[],
   blocksVersion: number,
+  isUsersCached: boolean
 } & Models.DefaultRow

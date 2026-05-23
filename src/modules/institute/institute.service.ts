@@ -174,6 +174,16 @@ const InstituteService = {
         const blocks = (institute || await InstituteService.getBlocks(instituteId)).blocks;
         const newStartingPage = prevStartingPage + studentCount;
         return newStartingPage >= blocks[blockId + 2]; // BUG ALERT: May possible bug out leading to inconsistent pages.
+    },
+    updateUserCacheStatus: async (
+        instituteId: string,
+        newStatus: boolean
+    ) => {
+        const institute = await InstituteRepository.updateInstituteById(instituteId, {
+            isUsersCached: newStatus
+        });
+
+        return { success: true, institute };
     }
 };
 

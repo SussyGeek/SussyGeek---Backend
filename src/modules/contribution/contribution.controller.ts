@@ -2,7 +2,6 @@ import { Request, Response, NextFunction } from "express";
 import ContributionService from "./contribution.service";
 import { ContributionBody } from "../../types/contribution";
 import { BLOCK, STUDENT_BATCH_SIZE } from "../../data/params";
-import StudentService from "../student/student.service";
 
 const ContributionController = {
     getUserAndInstContributions: async (req: Request, res: Response, next: NextFunction) => {
@@ -66,10 +65,6 @@ const ContributionController = {
             }: ContributionBody = req.body;
 
             const conRes = await ContributionService.handleContribution(username, instituteId, students);
-            const { isUsernamesCached } = conRes;
-
-            if (!isUsernamesCached)
-                await StudentService.cacheStudentUsernames(instituteId);
 
             res.locals.from.controllers.handleContributions = {
                 contributor: conRes.contributor,

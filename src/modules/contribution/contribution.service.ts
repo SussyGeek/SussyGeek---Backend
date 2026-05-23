@@ -311,8 +311,13 @@ const ContributionService = {
 
         // Creates block if not already.
         const blockRes = await InstituteService.assignBlocks(instituteId);
-        let isUsernamesCached = !blockRes.success;
-        const { institute } = blockRes;
+        let { institute } = blockRes;
+        let isUsernamesCached = institute.isUsersCached;
+
+        if(!isUsernamesCached){
+            const cacheRes = await StudentService.cacheStudentUsernames(institute.$id);
+            institute = cacheRes;
+        }
 
         if (institute.scrappedStudents === institute.students) {
             throw new ApiError(409, "No students left to scrape");
@@ -331,7 +336,6 @@ const ContributionService = {
         return {
             ...allocationRes,
             institute,
-            isUsernamesCached,
             contributor: contributionRows.user,
             totalStudents: institute.scrappedStudents,
             instituteContributions: contributionRows.institute
