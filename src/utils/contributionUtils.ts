@@ -1,7 +1,7 @@
 import { batchDict } from "../data/meta";
 import { BatchBody, StudentBody } from "../types/body";
 import { StudentRow } from "../types/models/student";
-import { redisHashObjectType } from "../types/repo";
+import { RedisHashObjectType } from "../types/repo";
 export const prepBatchList = (
   students: BatchBody[],
   instituteId: string
@@ -14,7 +14,7 @@ export const prepBatchList = (
     let transformedStudent: Partial<StudentBody> = { instituteId };
 
     for (const [beforeKey, afterKey] of Object.entries(batchDict)) {
-      transformedStudent[afterKey as keyof StudentBody] = student[beforeKey as keyof BatchBody];
+      transformedStudent[afterKey as keyof StudentBody] = student[beforeKey as keyof BatchBody] as any;
     }
 
     batch.push(transformedStudent as StudentBody);
@@ -25,17 +25,9 @@ export const prepBatchList = (
 
 export const aggregateScore = (batch: StudentBody[]) => {
   const studentRows: Partial<StudentRow>[] = [];
-  const scoreArr: redisHashObjectType[] = [];
-  const streakArr: redisHashObjectType[] = [];
-  const solvedArr: redisHashObjectType[] = [];
-
-  // Don't know why this is used. It was in original file, so I kept it.
-  // TODO: Whether useless or not.
-  const metaData = {
-    score: 0,
-    streak: 0,
-    students: 0
-  };
+  const scoreArr: RedisHashObjectType[] = [];
+  const streakArr: RedisHashObjectType[] = [];
+  const solvedArr: RedisHashObjectType[] = [];
 
   const hashData: Record<string, string> = {};
 

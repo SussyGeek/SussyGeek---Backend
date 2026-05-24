@@ -1,27 +1,18 @@
-type locationType = {
+export type LocationType = {
     city: string,
     state: string,
     country: string
 };
 
-type addInstituteSvcType = {
+export type AddInstituteSvcType = {
     name: string,
     slug: string,
     registeredGeeks: number,
-    location: locationType
-}
-
-type instituteInputBodyType = {
-    name: string,
-    slug: string,
-    studentCount: number,
-    city: string,
-    country: string,
-    state: string 
+    location: LocationType
 }
 
 // TODO: Change once you fix at the validation layer.
-type instituteFetchQueryTypes = {
+export type InstituteFetchQueryTypes = {
     id: string,
     page: string,
     name: string,

@@ -2,7 +2,6 @@ import { ID, Models, Operator, Query } from "node-appwrite"
 import { appwriteConfig } from "../../database/appwrite/config"
 import { database } from "../../database/appwrite/instance"
 import { InstituteRow } from "../../types/models/institute"
-import { AppwriteRes } from "../../types/appwrite"
 import { ApiError } from "../../errors/ApiError"
 
 
@@ -62,7 +61,7 @@ const InstituteRepository = {
             });
         }
     },
-    updateInstituteById: async (id: string, data: Partial<InstituteRow>) => {
+    updateInstituteById: async (id: string, data: Partial<InstituteRow>): Promise<InstituteRow> => {
         return await database.updateRow({
             databaseId: appwriteConfig.databaseId,
             tableId: appwriteConfig.institutionTableId,

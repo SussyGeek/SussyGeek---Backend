@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import InstituteService from "./institute.service";
+import { InstitutionBody } from "../../types/body";
+import { InstituteFetchQueryTypes } from "../../types/institute";
 
 const instituteController = {
     addInstitute: async (req: Request, res: Response, next: NextFunction) => {
@@ -11,7 +13,7 @@ const instituteController = {
                 city,
                 country,
                 state
-            }: instituteInputBodyType = req.body;
+            }: InstitutionBody = req.body;
 
             await InstituteService.addInstitute({
                 name,
@@ -35,7 +37,7 @@ const instituteController = {
                 page,
                 name,
                 limit,
-            } = req.query as instituteFetchQueryTypes;
+            } = req.query as InstituteFetchQueryTypes;
             // @ts-ignore TODO: Handle this at validation layer.
             const pageInt = parseInt(page, '10');
             // @ts-ignore. TODO: Fix this TS error.

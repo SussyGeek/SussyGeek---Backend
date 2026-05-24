@@ -14,7 +14,7 @@ export interface StudentBody {
     solved: number,
     score: number,
     instituteId: string,
-    rank: mumber,
+    rank: number,
     streak: number,
     difficultySolved?: number[],
     branch?: string
@@ -33,10 +33,11 @@ export interface BatchBody {
     scrapedAt: string
 }
 
-export interface ContributorReqBody {
-    instituteId: string, 
+export type ContributionBody = {
+    instituteId: string,
     username: string,
-    students?: BatchBody[]
+    students: BatchBody[],
+    seconds: number
 }
 
 export interface GFGUser {

@@ -1,11 +1,12 @@
 import { InstituteRow } from "../types/models/institute";
+import { AddInstituteSvcType } from "../types/institute";
 
 export const prepInstitutionObject = ({
         name,
         slug,
         registeredGeeks,
         location
-}: addInstituteSvcType
+}: AddInstituteSvcType
 ): Partial<Partial<InstituteRow>> => ({
         name,
         slug,

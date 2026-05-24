@@ -1,6 +1,6 @@
 import { metaFields } from "../../data/meta";
 import MetaRepository from "./meta.repository";
-import { metaFieldTypes } from "../../types/repo";
+import { MetaFieldTypes } from "../../types/repo";
 
 const MetaService = {
     getCounter: async (field: string) => {
@@ -14,7 +14,7 @@ const MetaService = {
 
         return scores;
     },
-    incrementAll: async (data: metaFieldTypes) => {
+    incrementAll: async (data: MetaFieldTypes) => {
         await MetaRepository.incrementAllFields(data);
         return { success: true };
     }

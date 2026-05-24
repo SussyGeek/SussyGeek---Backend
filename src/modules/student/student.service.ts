@@ -14,7 +14,7 @@ const StudentService = {
         const usernames = await GeeksForGeeksAPI.getUsernamesByInstitute(instituteId, count);
 
         await StudentRepository.redisAddUsernamesToInstituteSet(instituteId, usernames);
-        const institute = await InstituteService.updateUserCacheStatus(instituteId, true);
+        const { institute } = await InstituteService.updateUserCacheStatus(instituteId, true);
         return { success: true, institute };
     },
     isBatchValid: async (instituteId: string, students: BatchBody[]) => {

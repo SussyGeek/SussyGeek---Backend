@@ -1,6 +1,6 @@
 import { Models } from "node-appwrite";
 
-interface ContributionRow extends Models.DefaultRow {
+export interface ContributionRow extends Models.DefaultRow {
     uid: string;
     seconds: number;
     students: number;

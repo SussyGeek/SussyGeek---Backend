@@ -20,8 +20,9 @@ export const handleAuth = async (req: Request, res: Response, next: NextFunction
         res.locals.from.middlewares.handleAuth = {
             username: userRow.username,
             userState: userRow.state,
-            sessionId: sessionId
-        }
+            sessionId: sessionId,
+            userId: userRow.$id
+        };
         next();
     } catch (err) {
         next(err);

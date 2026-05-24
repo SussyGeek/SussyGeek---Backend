@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import ContributionService from "./contribution.service";
-import { ContributionBody } from "../../types/contribution";
+import { ContributionBody } from "../../types/body";
 import { BLOCK, STUDENT_BATCH_SIZE } from "../../data/params";
 
 const ContributionController = {
@@ -57,14 +57,14 @@ const ContributionController = {
     },
     handleContributions: async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { username } = res.locals.from.middlewares.handleAuth;
+            const { username, userId } = res.locals.from.middlewares.handleAuth;
             const {
                 instituteId,
-                students,  // TODO: Adjust type for this later.
+                students, 
                 seconds
             }: ContributionBody = req.body;
 
-            const conRes = await ContributionService.handleContribution(username, instituteId, students);
+            const conRes = await ContributionService.handleContribution(username, userId, instituteId);
 
             res.locals.from.controllers.handleContributions = {
                 contributor: conRes.contributor,
@@ -114,7 +114,6 @@ const ContributionController = {
             const data = res.locals.from.controllers.handleContributions;
 
             const result = await ContributionService.handleBatchPublication(
-                data.contributor.username,
                 data.institute,
                 data.studentBatch,
                 data.blockStartingPage,

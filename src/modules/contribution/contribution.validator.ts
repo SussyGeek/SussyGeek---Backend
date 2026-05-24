@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 export const BatchBodySchema = z.object({
-    id: z.string(),
-    username: z.string().max(120, "Username exceeds allowed length"),
-    fullName: z.string().max(120, "Full name exceeds allowed length"),
+    id: z.string().trim().min(1, "Invalid student ID provided."),
+    username: z.string().max(120, "Student username exceeds allowed length"),
+    fullName: z.string().max(120, "Student name exceeds allowed length"),
     institution: z.string().optional(), // This isn't required for now.
     codingScore: z.number(),
     problemsSolved: z.number(),

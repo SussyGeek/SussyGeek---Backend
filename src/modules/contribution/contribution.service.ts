@@ -15,6 +15,7 @@ import StudentService from "../student/student.service";
 import MetaService from "../meta/meta.service";
 import MetaRepository from "../meta/meta.repository";
 import { ApiError } from "../../errors/ApiError";
+import { HandleAuth } from "../../types/middlewareFields";
 
 
 const ContributionService = {
@@ -65,7 +66,7 @@ const ContributionService = {
     }> => {
         const { instituteContributions: contributions } = await ContributionService.getInstituteContributions(instituteId);
         let contributorRow;
-        const expiredContributorRows: ContributionRow[] = [];
+        const expiredContributionRows: ContributionRow[] = [];
 
         contributions.forEach(c => {
             const now = Math.floor(Date.now() / 1000);
@@ -74,12 +75,12 @@ const ContributionService = {
             const expired = (now - c.leaseExpiresAt) > timeUnits.SECONDSFOR.HalfHour;
             if (c.username === username) contributorRow = c;
             else if (expired && c.assignedBlock !== -1)
-                expiredContributorRows.push(c);
+                expiredContributionRows.push(c);
         });
 
         return {
             user: contributorRow,
-            expired: expiredContributorRows,
+            expired: expiredContributionRows,
             institute: contributions
         };
     },
@@ -305,18 +306,17 @@ const ContributionService = {
     },
     handleContribution: async (
         username: string,
-        instituteId: string,
-        students: number[] // TODO: Adjust type for this later.
+        userId: string,
+        instituteId: string
     ) => {
-
         // Creates block if not already.
         const blockRes = await InstituteService.assignBlocks(instituteId);
         let { institute } = blockRes;
         let isUsernamesCached = institute.isUsersCached;
 
-        if(!isUsernamesCached){
+        if (!isUsernamesCached) {
             const cacheRes = await StudentService.cacheStudentUsernames(institute.$id);
-            institute = cacheRes;
+            institute = cacheRes.institute;
         }
 
         if (institute.scrappedStudents === institute.students) {
@@ -325,8 +325,7 @@ const ContributionService = {
 
         const contributionRows = await ContributionService.getUserAndExpiredRows(username, instituteId);
         if (contributionRows.user == null) {
-            const uid = await UserService.getIdbyUsername(username); // TODO: Pass the id via handleAuth middleware
-            contributionRows.user = await ContributionService.createContribution(username, uid, instituteId);
+            contributionRows.user = await ContributionService.createContribution(username, userId, instituteId);
         }
 
         const allocationRes = await ContributionService.handleBlocks(
@@ -342,7 +341,6 @@ const ContributionService = {
         };
     },
     handleBatchPublication: async (
-        username: string,
         institute: InstituteRow,
         students: BatchBody[],
         startingPage: number,
@@ -355,8 +353,6 @@ const ContributionService = {
         const studentData = aggregateScore(batch);
 
         await StudentService.addStudents(studentData.rows);
-        // POSSIBLE BUG: Not sure but confirm via test. [Around the redis call]
-        // TODO: Dedicate a MetaService call to this involving Redis counter updates.
         await MetaRepository.redisAddScores(studentData, institute.$id);
         const isBlockComplete = await InstituteService.hasBlockCompleted(
             assignedBlock,
@@ -370,7 +366,7 @@ const ContributionService = {
 
         // TODO: Possibility of failure due to race condition. Handle appropriately. [NOT HANDLED]
         // Why it's not handled? Polling higher is already applied, the failure is possible state corruption.
-        const { success, blocks } = await InstituteService.updateBlockPagesAndState(
+        const { blocks } = await InstituteService.updateBlockPagesAndState(
             institute.$id, assignedBlock, newBlockState, studentCount
         )
 

@@ -1,4 +1,5 @@
 import { Models, Query } from "node-appwrite";
+import { AddInstituteSvcType } from "../../types/institute";
 import { prepInstitutionObject } from "../../utils/prepInstituteObject";
 import InstituteRepository from "./institute.repository";
 import { BLOCK, BLOCK_STATE, STUDENT_BATCH_SIZE } from "../../data/params";
@@ -16,7 +17,7 @@ const InstituteService = {
         slug,
         registeredGeeks,
         location
-    }: addInstituteSvcType) => {
+    }: AddInstituteSvcType) => {
 
         const instituteObject = prepInstitutionObject({
             name,

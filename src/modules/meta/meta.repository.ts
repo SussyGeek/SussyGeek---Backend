@@ -3,7 +3,7 @@ import { appwriteConfig } from "../../database/appwrite/config";
 import { database } from "../../database/appwrite/instance";
 import { metaFields } from "../../data/meta";
 import { getRedis } from "../../database/redis/instance";
-import { metaFieldTypes, redisScoresObj } from "../../types/repo";
+import { MetaFieldTypes, RedisScoresObj } from "../../types/repo";
 
 const MetaRepository = {
     getAllFields: async (): Promise<Models.RowList<Models.DefaultRow>> => {
@@ -24,7 +24,7 @@ const MetaRepository = {
             queries: [Query.select([field])]
         })
     },
-    incrementAllFields: async (data: metaFieldTypes) => { // TODO: Introduce a type in
+    incrementAllFields: async (data: MetaFieldTypes) => { // TODO: Introduce a type in
         return await database.updateRow({
             databaseId: appwriteConfig.databaseId,
             tableId: appwriteConfig.metaTableId,
@@ -37,7 +37,7 @@ const MetaRepository = {
         });
     },
     redisAddScores: async (
-        data: redisScoresObj,
+        data: RedisScoresObj,
         instituteId: string
     ) => {
         const redis = await getRedis();
