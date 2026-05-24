@@ -18,6 +18,19 @@ const StudentRepository = {
         const redis = await getRedis();
         return await redis.sAdd(`institute:${instituteId}:usernames`, usernames);
     },
+    redisCacheOrderedStudentList: async (
+        instituteId: string,
+        students: string[]
+    ) => {
+        const redis = await getRedis();
+        return await redis.rPush(`institute:${instituteId}:students`, students);
+    },
+    redisGetOrderedStudentList: async (
+        instituteId: string
+    ) => {
+        const redis = await getRedis();
+        return await redis.lRange(`institute:${instituteId}:students`, 0, -1);
+    },
     redisStudentMembershipCheck: async (
         instituteId: string,
         usernames: string[]

@@ -7,5 +7,4 @@ const client = new Client()
     .setKey(appwriteConfig?.apiKey ?? '');
 
 const database = new TablesDB(client);
-
 export { database };
