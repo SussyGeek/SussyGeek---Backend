@@ -2,8 +2,37 @@ import { database } from "../../database/appwrite/instance";
 import { appwriteConfig } from "../../database/appwrite/config";
 import { getRedis } from "../../database/redis/instance";
 import { StudentRow } from "../../types/models/student";
+import { Query } from "node-appwrite";
 
 const StudentRepository = {
+    listStudents: async (
+        instituteId: string,
+        pageNo: number,
+        pageSize: number
+    ) => {
+        return await database.listRows({
+            databaseId: appwriteConfig.databaseId,
+            tableId: appwriteConfig.studentTableId,
+            queries: [
+                Query.equal("instituteId", instituteId),
+                Query.limit(pageSize),
+                Query.offset(pageSize * pageNo),
+                Query.orderAsc("$sequence")
+            ]
+        });
+    },
+    listStudentsById: async (
+        studentIds: string[]
+    ) => {
+        return await database.listRows({
+            databaseId: appwriteConfig.databaseId,
+            tableId: appwriteConfig.studentTableId,
+            queries: [
+                Query.equal("$id", [studentIds]),
+                Query.select(["username", "name"])
+            ]
+        });
+    },
     addMultiple: async (data: Partial<StudentRow>[]) => {
         return await database.createRows({
             databaseId: appwriteConfig.databaseId,

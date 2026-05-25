@@ -8,6 +8,7 @@ function ErrorHandler(
     res: Response,
     next: NextFunction
 ) {
+    console.log(err);
     if (err instanceof ApiError) {
         return res.status(err.statusCode).json({
             success: false,
@@ -20,8 +21,8 @@ function ErrorHandler(
     return res.status(500).json({
         success: false,
         message: 'Internal server error',
-        details: process.env.NODE_ENV === 'production' 
-            ? undefined 
+        details: process.env.NODE_ENV === 'production'
+            ? undefined
             : (err instanceof Error ? err.message : String(err)),
     });
 }

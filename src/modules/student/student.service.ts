@@ -23,9 +23,44 @@ const StudentService = {
         const { institute } = await InstituteService.updateUserCacheStatus(instituteId, true);
         return { success: true, institute };
     },
-    getOrderedStudentList: async (instituteId: string) => {
+    listFrozenStudents: async (instituteId: string) => {
         const raw = await StudentRepository.redisGetOrderedStudentList(instituteId);
-        return raw.map(entry => JSON.parse(entry));
+        const students = raw.map(entry => JSON.parse(entry));
+        return { 
+            success: true, 
+            data: { students } 
+        };
+    },
+    // TODO: Adapt this function to use
+    /*
+        SORTING.
+    */
+    listRegularStudents: async (
+        instituteId: string, 
+        pageNo: number, 
+        pageSize: number = 10
+    ) => {
+        const pageOffset = pageNo-1;
+
+        const res = await StudentRepository.listStudents(
+            instituteId,
+            pageOffset,
+            pageSize
+        );
+
+        return { 
+            success: true, 
+            data: { students: res.rows } 
+        };
+    },
+    listStudentsByUserId: async (
+        studentIds: string[]
+    ) => {
+        const { rows } = await StudentRepository.listStudentsById(studentIds);
+        return { 
+            success: true, 
+            data: rows 
+        };
     },
     isBatchValid: async (instituteId: string, students: BatchBody[]) => {
         const usernames = students.map(s => s.username);

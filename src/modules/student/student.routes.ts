@@ -8,11 +8,21 @@ import StudentController from "./student.controller";
 const router = express.Router();
 
 router.use(initializeFields);
+
+router.get("/institute/:instituteId/list/regular",
+    validate(StudentValidator.listRegularStudents),
+    StudentController.listRegularStudents
+);
+router.get('/list',
+    validate(StudentValidator.listStudentsByUserId),
+    StudentController.listStudentsByUserId
+);
+
 router.use(handleAuth);
 
-router.get('/:instituteId/list',
-    validate(StudentValidator.getStudentList),
-    StudentController.getStudentList
+router.get('/institute/:instituteId/list/frozen',
+    validate(StudentValidator.listFrozenStudents),
+    StudentController.listFrozenStudents
 );
 
 export default router;

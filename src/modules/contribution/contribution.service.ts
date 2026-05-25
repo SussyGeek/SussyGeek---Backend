@@ -409,7 +409,7 @@ const ContributionService = {
         if (sessionExpired)
             return { success: true, message: "Session already expired" };
 
-        const newExpirySeconds = secondsNow - timeUnits.SECONDSFOR.Hour;
+        const newExpirySeconds = Math.round(secondsNow - timeUnits.SECONDSFOR.Hour);
         await ContributionRepository.updateContribution(
             contributionRow.$id,
             {
