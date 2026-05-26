@@ -25,12 +25,23 @@ const StudentController = {
             next(err);
         }
     },
-    listStudentsByUserId: async (req: Request, res: Response, next: NextFunction) => {
+    listStudentsByUserIds: async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { studentIds } = req.query as unknown as { studentIds: string[] };
 
-            const result = await StudentService.listStudentsByUserId(studentIds);
+            const result = await StudentService.listStudentsByUserIds(studentIds);
 
+            return res.json(result);
+        } catch (err) {
+            next(err);
+        }
+    },
+    listStudentByFullnameInInstitute: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { name, instituteId } = req.query as unknown as { name: string, instituteId: string };
+            const result = await StudentService.listStudentsByFullNameInInstitute(
+                name, instituteId
+            );
             return res.json(result);
         } catch (err) {
             next(err);

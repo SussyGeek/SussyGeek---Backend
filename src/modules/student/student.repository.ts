@@ -21,16 +21,29 @@ const StudentRepository = {
             ]
         });
     },
-    listStudentsById: async (
+    listStudentsByIds: async (
         studentIds: string[]
     ) => {
         return await database.listRows({
             databaseId: appwriteConfig.databaseId,
             tableId: appwriteConfig.studentTableId,
             queries: [
-                Query.equal("$id", [studentIds]),
+                Query.equal("$id", studentIds),
                 Query.select(["username", "name"])
             ]
+        });
+    },
+    listByFullNameInInstitute: async (
+        fullName: string,
+        instituteId: string
+    ) => {
+          return await database.listRows({
+            databaseId: appwriteConfig.databaseId,
+            tableId: appwriteConfig.studentTableId,
+            queries: [ Query.and([
+                Query.equal("instituteId", instituteId),
+                Query.search("name", fullName)
+            ]) ]
         });
     },
     addMultiple: async (data: Partial<StudentRow>[]) => {
@@ -45,7 +58,7 @@ const StudentRepository = {
         usernames: string[]
     ) => {
         const redis = await getRedis();
-        return await redis.sAdd(`institute:${instituteId}:usernames`, usernames);
+        return await redis.sAdd(`institute:${instituteId}:users`, usernames);
     },
     redisCacheOrderedStudentList: async (
         instituteId: string,
@@ -62,13 +75,23 @@ const StudentRepository = {
     },
     redisStudentMembershipCheck: async (
         instituteId: string,
-        usernames: string[]
+        users: string[]
     ) => {
         const redis = await getRedis();
         return await redis.smIsMember(
-            `institute:${instituteId}:usernames`,
-            usernames
+            `institute:${instituteId}:users`,
+            users
         );
+    },
+    redisScrappedMembershipCheck: async (
+        instituteId: string,
+        users: string[]
+    ) => {
+        const redis = await getRedis();
+        return await redis.smIsMember(
+            `institute:${instituteId}:scrapped`,
+            users
+        )
     }
 };
 

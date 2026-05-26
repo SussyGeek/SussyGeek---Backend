@@ -32,6 +32,7 @@ export const aggregateScore = (batch: StudentBody[]) => {
   const hashData: Record<string, string> = {};
 
   batch.forEach(student => {
+    // For Appwrite
     studentRows.push({
       $id: student.$id,
       instituteId: student.instituteId,
@@ -40,17 +41,22 @@ export const aggregateScore = (batch: StudentBody[]) => {
       name: student.name
     });
 
+    // For hash based storage
     const stats = JSON.stringify({
+      username: student.username,
+      name: student.name,
       score: student.score,
       solved: student.solved,
       streak: student.streak
     });
 
-    hashData[student.username] = stats;
+    hashData[student.$id] = stats;
 
-    scoreArr.push({ score: student.score, value: student.username });
-    streakArr.push({ score: student.streak, value: student.username });
-    solvedArr.push({ score: student.solved, value: student.username });
+    // Counters on sorted set.
+    scoreArr.push({ score: student.score, value: student.$id });
+    streakArr.push({ score: student.streak, value: student.$id });
+    solvedArr.push({ score: student.solved, value: student.$id });
+
   });
 
   return {
@@ -60,6 +66,9 @@ export const aggregateScore = (batch: StudentBody[]) => {
       scoreArr,
       streakArr,
       solvedArr
-    }
+    },
+    serializedStudentIds: studentRows.map(
+      sRow => JSON.stringify({ username: sRow.username, user_id: sRow.$id })
+    )
   }
 }

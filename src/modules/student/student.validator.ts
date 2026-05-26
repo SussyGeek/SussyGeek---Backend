@@ -21,6 +21,12 @@ const StudentValidator = {
                 z.array(z.string().nonempty()).min(1).max(10)
             )
         })
+    },
+    listStudentByFullNameInInstitute: {
+        query: z.object({
+            name: z.string().min(1),
+            instituteId: z.string().min(1)
+        })
     }
 };
 

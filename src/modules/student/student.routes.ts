@@ -15,7 +15,11 @@ router.get("/institute/:instituteId/list/regular",
 );
 router.get('/list',
     validate(StudentValidator.listStudentsByUserId),
-    StudentController.listStudentsByUserId
+    StudentController.listStudentsByUserIds
+);
+router.get("/search", 
+    validate(StudentValidator.listStudentByFullNameInInstitute),
+    StudentController.listStudentByFullnameInInstitute
 );
 
 router.use(handleAuth);

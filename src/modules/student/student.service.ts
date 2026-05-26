@@ -6,6 +6,11 @@ import StudentRepository from "./student.repository";
 
 const StudentService = {
     addStudents: async (students: Partial<StudentRow>[]) => {
+        students.forEach(s => {
+                s.name = s.name?.toLowerCase()
+                s.username = s.username?.toLowerCase()
+            }
+        );
         await StudentRepository.addMultiple(students);
         return { succes: true };
     },
@@ -13,12 +18,12 @@ const StudentService = {
         const count = await GeeksForGeeksAPI.getTotalStudentCount(instituteId);
         const students = await GeeksForGeeksAPI.getStudentsByInstitute(instituteId, count);
 
-        const usernames = students.map(s => s.handle);
-        const orderedList = students.map(s =>
-            JSON.stringify({ handle: s.handle, user_id: s.user_id })
-        );
+        const cacheSet = students.map(s => JSON.stringify({ username: s.handle, user_id: s.user_id }));
+        // Ordered list maintains handle rather than username 
+        // just respecting GFG API conventions.
+        const orderedList = students.map(s => JSON.stringify({ handle: s.handle, user_id: s.user_id }));
 
-        await StudentRepository.redisAddUsernamesToInstituteSet(instituteId, usernames);
+        await StudentRepository.redisAddUsernamesToInstituteSet(instituteId, cacheSet);
         await StudentRepository.redisCacheOrderedStudentList(instituteId, orderedList);
         const { institute } = await InstituteService.updateUserCacheStatus(instituteId, true);
         return { success: true, institute };
@@ -53,19 +58,34 @@ const StudentService = {
             data: { students: res.rows } 
         };
     },
-    listStudentsByUserId: async (
+    listStudentsByUserIds: async (
         studentIds: string[]
     ) => {
-        const { rows } = await StudentRepository.listStudentsById(studentIds);
+        const { rows } = await StudentRepository.listStudentsByIds(studentIds);
         return { 
             success: true, 
             data: rows 
         };
     },
+    listStudentsByFullNameInInstitute: async (
+        fullName: string,
+        instituteId: string
+    ) => {
+        const { rows } = await StudentRepository.listByFullNameInInstitute(fullName, instituteId);
+        return {
+            success: true, 
+            data: rows 
+        }
+    },
     isBatchValid: async (instituteId: string, students: BatchBody[]) => {
-        const usernames = students.map(s => s.username);
-        const result = await StudentRepository.redisStudentMembershipCheck(instituteId, usernames);
+        const users = students.map(s => JSON.stringify({ username: s.username, user_id: s.id }));
+        const result = await StudentRepository.redisStudentMembershipCheck(instituteId, users);
         return result.every(r => r === 1);
+    },
+    isSomeStudentRepeated: async (instituteId: string, students: BatchBody[]) => {
+        const users = students.map(s => JSON.stringify({ username: s.username, user_id: s.id }));
+        const result = await StudentRepository.redisScrappedMembershipCheck(instituteId, users);
+        return result.some(r => r === 1);
     }
 };
 

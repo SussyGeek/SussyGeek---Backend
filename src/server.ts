@@ -12,9 +12,21 @@ const app = express();
 
 // Configuration
 app.set('trust proxy', 1);
+const allowedOrigins = [
+    process.env.ORIGIN_URL,
+    "https://www.geeksforgeeks.org",
+    "https://practiceapi.geeksforgeeks.org"
+].filter(Boolean);
+
 app.use(cors(
     {
-        origin: process.env.ORIGIN_URL,
+        origin: (origin, callback) => {
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, true);
+            } else {
+                callback(new Error("Not allowed by CORS"));
+            }
+        },
         credentials: true,
         methods: ["GET", "POST", "PUT", "PATCH", "DELETE"]
     }

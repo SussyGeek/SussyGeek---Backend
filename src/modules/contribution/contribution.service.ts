@@ -312,9 +312,9 @@ const ContributionService = {
         // Creates block if not already.
         const blockRes = await InstituteService.assignBlocks(instituteId);
         let { institute } = blockRes;
-        let isUsernamesCached = institute.isUsersCached;
+        const { isUsersCached } = institute;
 
-        if (!isUsernamesCached) {
+        if (!isUsersCached) {
             const cacheRes = await StudentService.cacheStudentUsernames(institute.$id);
             institute = cacheRes.institute;
         }

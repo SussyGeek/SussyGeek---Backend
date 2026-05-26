@@ -4,6 +4,7 @@ import { database } from "../../database/appwrite/instance";
 import { metaFields } from "../../data/meta";
 import { getRedis } from "../../database/redis/instance";
 import { MetaFieldTypes, RedisScoresObj } from "../../types/repo";
+import { ScoreAggreation } from "../../types/institute";
 
 const MetaRepository = {
     getAllFields: async (): Promise<Models.RowList<Models.DefaultRow>> => {
@@ -37,7 +38,7 @@ const MetaRepository = {
         });
     },
     redisAddScores: async (
-        data: RedisScoresObj,
+        data: ScoreAggreation,
         instituteId: string
     ) => {
         const redis = await getRedis();
@@ -47,6 +48,10 @@ const MetaRepository = {
             .zAdd(`institute:${instituteId}:scores`, data.counterArrays.scoreArr)
             .zAdd(`institute:${instituteId}:streaks`, data.counterArrays.streakArr)
             .zAdd(`institute:${instituteId}:solved`, data.counterArrays.solvedArr)
+            .zAdd("global:scores", data.counterArrays.scoreArr)
+            .zAdd("global:streaks", data.counterArrays.streakArr)
+            .zAdd("global:solved", data.counterArrays.solvedArr)
+            .sAdd(`institute:${instituteId}:scrapped`, data.serializedStudentIds)
             .exec();
     }
 };

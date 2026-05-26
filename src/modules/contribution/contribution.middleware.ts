@@ -47,8 +47,14 @@ const ContributionMiddlewares = {
                 throw new ApiError(400, "Batch malformed");
 
             const isBatchValid = await StudentService.isBatchValid(institute.$id, students);
+
             if (!isBatchValid)
                 throw new ApiError(400, "Invalid student list provided.");
+            
+            const isSomeStudentRepeat = await StudentService.isSomeStudentRepeated(institute.$id, students);
+
+            if (!isSomeStudentRepeat)
+                throw new ApiError(409, "Batch rejected due to duplicate students.");
 
             next();
         } catch (err) {

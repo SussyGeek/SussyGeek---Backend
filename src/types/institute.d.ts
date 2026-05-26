@@ -1,3 +1,6 @@
+import { StudentRow } from "./models/student";
+import { RedisHashObjectType } from "./repo";
+
 export type LocationType = {
     city: string,
     state: string,
@@ -18,3 +21,14 @@ export type InstituteFetchQueryTypes = {
     name: string,
     limit: string
 };
+
+export type ScoreAggreation = {
+    rows: Partial<StudentRow>[];
+    hashScores: Record<string, string>;
+    counterArrays: {
+        scoreArr: RedisHashObjectType[];
+        streakArr: RedisHashObjectType[];
+        solvedArr: RedisHashObjectType[];
+    };
+    serializedStudentIds: string[];
+}
