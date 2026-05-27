@@ -33,15 +33,16 @@ const ContributionMiddlewares = {
             const { students } = req.body
 
             const { blockStartingPage, institute } = res.locals.from.controllers.handleContributions;
-            const totalStudents = institute.students;
+            const totalStudents = institute.totalStudents;
 
             const BATCH_REMAINDER = totalStudents % STUDENT_BATCH_SIZE;
 
             const isFullBatch = students.length === STUDENT_BATCH_SIZE;
             const isLastBatch =
                 BATCH_REMAINDER !== 0 &&
-                ((blockStartingPage - 1) + students.length === totalStudents) &&
-                (students.length === BATCH_REMAINDER);
+                (students.length === BATCH_REMAINDER); // &&
+            // ((blockStartingPage - 1) + students.length === totalStudents) && [This check will cause bugs if the last batch doesn't complete scrapped students and someone's claimed batch is simultaneously pending]
+
 
             if (!isFullBatch && !isLastBatch)
                 throw new ApiError(400, "Batch malformed");
@@ -50,10 +51,10 @@ const ContributionMiddlewares = {
 
             if (!isBatchValid)
                 throw new ApiError(400, "Invalid student list provided.");
-            
+
             const isSomeStudentRepeat = await StudentService.isSomeStudentRepeated(institute.$id, students);
 
-            if (!isSomeStudentRepeat)
+            if (isSomeStudentRepeat)
                 throw new ApiError(409, "Batch rejected due to duplicate students.");
 
             next();

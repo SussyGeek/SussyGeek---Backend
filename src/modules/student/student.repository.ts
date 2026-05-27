@@ -37,13 +37,13 @@ const StudentRepository = {
         fullName: string,
         instituteId: string
     ) => {
-          return await database.listRows({
+        return await database.listRows({
             databaseId: appwriteConfig.databaseId,
             tableId: appwriteConfig.studentTableId,
-            queries: [ Query.and([
-                Query.equal("instituteId", instituteId),
+            queries: [Query.and([
+                Query.equal("institute", instituteId),
                 Query.search("name", fullName)
-            ]) ]
+            ])]
         });
     },
     addMultiple: async (data: Partial<StudentRow>[]) => {

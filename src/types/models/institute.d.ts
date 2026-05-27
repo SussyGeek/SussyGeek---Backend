@@ -7,7 +7,7 @@ export type InstituteRow = {
   state: string | null,
   country: string | null,
   score: number,
-  students: number,
+  totalStudents: number,
   scrappedStudents: number,
   problemsSolved: number,
   status: "Complete" | "Incomplete" | "Scrapping",

@@ -63,7 +63,7 @@ const InstituteService = {
         const updateHourDiff = (Date.now() - lastUpdate) / (3600 * 1000);
 
         const newStudentCount = 0; // TODO: Fetch institute count from GFG API;
-        const difference = newStudentCount - institute.students;
+        const difference = newStudentCount - institute.totalStudents;
 
         if (updateHourDiff >= 1 && difference != 0) {
             // TODO: Verify if atomic operations lead to updation of $updatedAt
@@ -137,25 +137,25 @@ const InstituteService = {
 
         // First-time block initialization: fetch actual student count from GFG API.
         const newStudentCount = await GeeksForGeeksAPI.getTotalStudentCount(instituteId);
-        if (newStudentCount - institute.students > 0) {
+        if (Math.abs(newStudentCount - institute.totalStudents) > 0) {
             await InstituteRepository.updateInstituteById(instituteId, {
-                students: newStudentCount
+                totalStudents: newStudentCount
             });
-            institute.students = newStudentCount;
+            institute.totalStudents = newStudentCount;
         }
 
-        if (institute.students === 0)
+        if (institute.totalStudents === 0)
             throw new ApiError(409, "No students to form blocks on.");
 
         let blockList = [];
-        const totalBlocks = Math.ceil(institute.students / (STUDENT_BATCH_SIZE * BLOCK));
+        const totalBlocks = Math.ceil(institute.totalStudents / (STUDENT_BATCH_SIZE * BLOCK));
         const blockPages = STUDENT_BATCH_SIZE * BLOCK;
 
         for (let b = 0; b < totalBlocks; b++) {
             const startPage = (blockPages * b) + 1;
             const endPage = Math.min(
                 blockPages * (b + 1),
-                institute.students
+                institute.totalStudents
             );
             const state = BLOCK_STATE['FREE'];
             blockList.push(state, startPage, endPage);
@@ -174,7 +174,7 @@ const InstituteService = {
     hasBlockCompleted: async (blockId: number, prevStartingPage: number, studentCount: number, institute: InstituteRow | null, instituteId: string) => {
         const blocks = (institute || await InstituteService.getBlocks(instituteId)).blocks;
         const newStartingPage = prevStartingPage + studentCount;
-        return newStartingPage >= blocks[blockId + 2]; // BUG ALERT: May possible bug out leading to inconsistent pages.
+        return newStartingPage >= blocks[blockId + 2]; 
     },
     updateUserCacheStatus: async (
         instituteId: string,

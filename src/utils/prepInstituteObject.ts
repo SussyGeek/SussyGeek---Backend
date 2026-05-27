@@ -14,7 +14,7 @@ export const prepInstitutionObject = ({
         state: location?.state ?? '',
         country: location?.country ?? '',
         score: 0,
-        students: registeredGeeks ?? 0,
+        totalStudents: registeredGeeks ?? 0,
         scrappedStudents: 0,
         status: "Incomplete",
 });

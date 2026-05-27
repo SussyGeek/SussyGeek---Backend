@@ -7,9 +7,9 @@ import StudentRepository from "./student.repository";
 const StudentService = {
     addStudents: async (students: Partial<StudentRow>[]) => {
         students.forEach(s => {
-                s.name = s.name?.toLowerCase()
-                s.username = s.username?.toLowerCase()
-            }
+            s.name = s.name?.toLowerCase()
+            s.username = s.username?.toLowerCase()
+        }
         );
         await StudentRepository.addMultiple(students);
         return { succes: true };
@@ -31,9 +31,9 @@ const StudentService = {
     listFrozenStudents: async (instituteId: string) => {
         const raw = await StudentRepository.redisGetOrderedStudentList(instituteId);
         const students = raw.map(entry => JSON.parse(entry));
-        return { 
-            success: true, 
-            data: { students } 
+        return {
+            success: true,
+            data: { students }
         };
     },
     // TODO: Adapt this function to use
@@ -41,11 +41,11 @@ const StudentService = {
         SORTING.
     */
     listRegularStudents: async (
-        instituteId: string, 
-        pageNo: number, 
+        instituteId: string,
+        pageNo: number,
         pageSize: number = 10
     ) => {
-        const pageOffset = pageNo-1;
+        const pageOffset = pageNo - 1;
 
         const res = await StudentRepository.listStudents(
             instituteId,
@@ -53,18 +53,18 @@ const StudentService = {
             pageSize
         );
 
-        return { 
-            success: true, 
-            data: { students: res.rows } 
+        return {
+            success: true,
+            data: { students: res.rows }
         };
     },
     listStudentsByUserIds: async (
         studentIds: string[]
     ) => {
         const { rows } = await StudentRepository.listStudentsByIds(studentIds);
-        return { 
-            success: true, 
-            data: rows 
+        return {
+            success: true,
+            data: rows
         };
     },
     listStudentsByFullNameInInstitute: async (
@@ -73,17 +73,17 @@ const StudentService = {
     ) => {
         const { rows } = await StudentRepository.listByFullNameInInstitute(fullName, instituteId);
         return {
-            success: true, 
-            data: rows 
+            success: true,
+            data: rows
         }
     },
     isBatchValid: async (instituteId: string, students: BatchBody[]) => {
-        const users = students.map(s => JSON.stringify({ username: s.username, user_id: s.id }));
+        const users = students.map(s => JSON.stringify({ username: s.username, user_id: Number(s.id) }));
         const result = await StudentRepository.redisStudentMembershipCheck(instituteId, users);
         return result.every(r => r === 1);
     },
     isSomeStudentRepeated: async (instituteId: string, students: BatchBody[]) => {
-        const users = students.map(s => JSON.stringify({ username: s.username, user_id: s.id }));
+        const users = students.map(s => JSON.stringify({ username: s.username, user_id: Number(s.id) }));
         const result = await StudentRepository.redisScrappedMembershipCheck(instituteId, users);
         return result.some(r => r === 1);
     }

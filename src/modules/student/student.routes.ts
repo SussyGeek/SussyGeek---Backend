@@ -4,6 +4,8 @@ import StudentValidator from "./student.validator";
 import { initializeFields } from "../../middlewares/fields.middleware";
 import { handleAuth } from "../../middlewares/auth.middleware";
 import StudentController from "./student.controller";
+import { database } from "../../database/appwrite/instance";
+import { appwriteConfig } from "../../database/appwrite/config";
 
 const router = express.Router();
 
@@ -17,7 +19,7 @@ router.get('/list',
     validate(StudentValidator.listStudentsByUserId),
     StudentController.listStudentsByUserIds
 );
-router.get("/search", 
+router.get("/search",
     validate(StudentValidator.listStudentByFullNameInInstitute),
     StudentController.listStudentByFullnameInInstitute
 );

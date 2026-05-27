@@ -27,6 +27,7 @@ const StudentController = {
     },
     listStudentsByUserIds: async (req: Request, res: Response, next: NextFunction) => {
         try {
+            // TODO: This is temporary solution for ts. Find better
             const { studentIds } = req.query as unknown as { studentIds: string[] };
 
             const result = await StudentService.listStudentsByUserIds(studentIds);
@@ -38,6 +39,7 @@ const StudentController = {
     },
     listStudentByFullnameInInstitute: async (req: Request, res: Response, next: NextFunction) => {
         try {
+            // TODO: This is temporary solution for ts. Find better
             const { name, instituteId } = req.query as unknown as { name: string, instituteId: string };
             const result = await StudentService.listStudentsByFullNameInInstitute(
                 name, instituteId

@@ -1,4 +1,5 @@
 import { Models } from "node-appwrite";
+import { InstituteRow } from "./institute";
 
 export interface ContributionRow extends Models.DefaultRow {
     uid: string;
@@ -6,7 +7,7 @@ export interface ContributionRow extends Models.DefaultRow {
     students: number;
     startPage: number;
     username: string;
-    instituteId: string;
+    institute: string | InstituteRow | undefined;
     assignedBlock: number;
     endPage: number;
     leaseExpiresAt: number;

@@ -1,4 +1,5 @@
 import { Models } from "node-appwrite";
+import { InstituteRow } from "./institute";
 
 export interface StudentRow extends Models.DefaultRow {
     $id: string,

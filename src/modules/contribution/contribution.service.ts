@@ -319,7 +319,7 @@ const ContributionService = {
             institute = cacheRes.institute;
         }
 
-        if (institute.scrappedStudents === institute.students) {
+        if (institute.scrappedStudents === institute.totalStudents) {
             throw new ApiError(409, "No students left to scrape");
         }
 
