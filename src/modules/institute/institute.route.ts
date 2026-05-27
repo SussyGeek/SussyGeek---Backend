@@ -2,12 +2,10 @@ import express from 'express';
 import validate from '../../middlewares/validation.middleware';
 import { InstituteValidator } from './institute.validator';
 import instituteController from './institute.controller';
-import { database } from '../../database/appwrite/instance';
-import { appwriteConfig } from '../../database/appwrite/config';
-import { shitData } from '../../shit';
 
 const router = express.Router();
 
+// This endpoint will be deprecated.
 router.post('/add',
     validate(InstituteValidator.addInstitute),
     // TODO: New middleware that checks if institute exists.

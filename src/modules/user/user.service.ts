@@ -1,6 +1,5 @@
 import { userStateValidityCheck } from "../../data/params";
 import { ApiError } from "../../errors/ApiError";
-import createSessionId from "../../utils/createSessionId";
 import SessionRepository from "./repositories/session.repository";
 import UserRepository from "./repositories/user.repository"
 
@@ -8,19 +7,17 @@ import UserRepository from "./repositories/user.repository"
 const UserService = {
     Login: async (username: string) => {
         const userRes = await UserRepository.findByUsername(username);
-
         const userRow = (userRes.total > 0 ?
             userRes.rows[0] :
             await UserRepository.createNewUser(username)
         );
 
-        const uid = userRow.$id;
-        const existingSessions = (userRes.total > 0 ?
-            await UserRepository.listSessionByUID(uid) : // User already exists.
-            { total: 0, rows: [] } // We just created the user.
-        );
+        const userSessionExists = userRow.sessionId != undefined;
 
-        if (existingSessions.total > 0) throw new ApiError(403, "Username currently occupied.");
+        if (userSessionExists)
+            throw new ApiError(403, "Username currently in use.");
+
+        const uid = userRow.$id;
 
         const session = await SessionRepository.createSession(uid);
         await UserRepository.updateUserById(uid, { sessionId: session.$id });

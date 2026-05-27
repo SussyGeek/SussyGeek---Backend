@@ -17,7 +17,7 @@ const UserController = {
     },
     Logout: async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { sessionId } = res.locals.from.middlewares.handleAuth;
+            const { sessionId } = res.locals.from.middlewares.hasSession;
             await UserService.Logout(sessionId);
 
             return res.json({ success: true });

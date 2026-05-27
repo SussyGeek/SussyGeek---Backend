@@ -15,15 +15,15 @@ const ContributionRepository = {
             queries: [Query.equal('instituteId', instituteId)]
         });
     },
-    getUserContributions: async (username: string): Promise<Models.RowList<ContributionRow>> => {
+    getUserContributions: async (userId: string): Promise<Models.RowList<ContributionRow>> => {
         return database.listRows({
             databaseId: appwriteConfig.databaseId,
             tableId: appwriteConfig.contributionsTableId,
-            queries: [Query.equal('username', username)]
+            queries: [Query.equal('user', userId)]
         });
     },
     getUserAndInstContributions: async (
-        username: string,
+        userId: string,
         instituteId: string
     ) => {
         return database.listRows({
@@ -31,12 +31,12 @@ const ContributionRepository = {
             tableId: appwriteConfig.contributionsTableId,
             queries: [Query.or([
                 Query.equal('instituteId', instituteId),
-                Query.equal('username', username)
+                Query.equal('user', userId)
             ])]
         });
     },
     getUserRelatedInstContribution: async (
-        username: string,
+        userId: string,
         instituteId: string
     ) => {
         return database.listRows({
@@ -44,7 +44,7 @@ const ContributionRepository = {
             tableId: appwriteConfig.contributionsTableId,
             queries: [Query.and([
                 Query.equal('instituteId', instituteId),
-                Query.equal('username', username)
+                Query.equal('user', userId)
             ])]
         });
     },

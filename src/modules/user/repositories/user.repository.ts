@@ -1,10 +1,11 @@
-import { ID, Query } from "node-appwrite";
+import { ID, Models, Query } from "node-appwrite";
 import { appwriteConfig } from "../../../database/appwrite/config";
 import { database } from "../../../database/appwrite/instance";
+import { UserRow } from "../../../types/models/user";
 
 
 const UserRepository = {
-    findByUsername: async (username: string) => {
+    findByUsername: async (username: string): Promise<Models.RowList<UserRow>> => {
         return await database.listRows({
             databaseId: appwriteConfig.databaseId,
             tableId: appwriteConfig.usersTableId,
@@ -39,7 +40,7 @@ const UserRepository = {
             rowId: uid,
         });
     },
-    createNewUser: async (username: string) => {
+    createNewUser: async (username: string): Promise<UserRow> => {
         return await database.createRow({
             databaseId: appwriteConfig.databaseId,
             tableId: appwriteConfig.usersTableId,

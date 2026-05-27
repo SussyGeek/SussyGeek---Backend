@@ -9,8 +9,9 @@ const ContributionController = {
         // ACTIVE scrapper instances/sessions.
         try {
             const { instituteId, username } = req.params;
+            const userId = await ContributionService.resolveUserIdByUsername(username);
             const data = await ContributionService.getInstituteAndUserContributions(
-                username,
+                userId,
                 instituteId
             );
 
@@ -26,8 +27,9 @@ const ContributionController = {
     getUserContributions: async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { username } = req.params;
+            const userId = await ContributionService.resolveUserIdByUsername(username);
             const data = await ContributionService.getUserContributions(
-                username,
+                userId,
             );
 
             return res.json({
@@ -57,20 +59,20 @@ const ContributionController = {
     },
     handleContributions: async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { username, userId } = res.locals.from.middlewares.handleAuth;
+            const { userId } = res.locals.from.middlewares.handleAuth;
             const {
                 instituteId,
-                students, 
+                students,
                 seconds
             }: ContributionBody = req.body;
 
-            const conRes = await ContributionService.handleContribution(username, userId, instituteId);
+            const conRes = await ContributionService.handleContribution(userId, instituteId);
 
             res.locals.from.controllers.handleContributions = {
                 contributor: conRes.contributor,
                 contributorRowId: conRes.contributor.$id,
                 instituteContributions: conRes.instituteContributions.filter(
-                    row => row.username !== username
+                    row => row.user !== userId
                 ),
                 blockStartingPage: conRes.startingPage,
                 blockEndingPage: conRes.endingPage,
@@ -96,7 +98,7 @@ const ContributionController = {
                         instituteScrappedCount: conRes.institute.scrappedStudents,
                         instituteContributions: res.locals.from.controllers.handleContributions.instituteContributions,
                         userInstituteContribution: conRes.instituteContributions.find(
-                            row => row.username === username
+                            row => row.user === userId
                         )
                     }
                 });
@@ -136,10 +138,10 @@ const ContributionController = {
     stopContribution: async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { instituteId } = req.params;
-            const { username, sessionId } = res.locals.from.middlewares.handleAuth;
+            const { userId, sessionId } = res.locals.from.middlewares.handleAuth;
 
             const result = await ContributionService.stopContribution(
-                username,
+                userId,
                 instituteId,
                 sessionId
             );

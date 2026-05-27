@@ -4,8 +4,6 @@ import StudentValidator from "./student.validator";
 import { initializeFields } from "../../middlewares/fields.middleware";
 import { handleAuth } from "../../middlewares/auth.middleware";
 import StudentController from "./student.controller";
-import { database } from "../../database/appwrite/instance";
-import { appwriteConfig } from "../../database/appwrite/config";
 
 const router = express.Router();
 

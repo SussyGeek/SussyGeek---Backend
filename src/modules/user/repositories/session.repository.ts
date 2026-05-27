@@ -2,6 +2,7 @@ import { ID, Models, Query } from "node-appwrite";
 import { appwriteConfig } from "../../../database/appwrite/config"
 import { database } from "../../../database/appwrite/instance"
 import { ApiError } from "../../../errors/ApiError";
+import { SessionRow } from "../../../types/models/session";
 
 
 
@@ -30,7 +31,7 @@ const SessionRepository = {
             return null;
         }
     },
-    createSession: async (userId: string) => {
+    createSession: async (userId: string): Promise<SessionRow> => {
         return await database.createRow({
             databaseId: appwriteConfig.databaseId,
             tableId: appwriteConfig.sessionsTableId,

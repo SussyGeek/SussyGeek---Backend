@@ -19,8 +19,11 @@ import { HandleAuth } from "../../types/middlewareFields";
 
 
 const ContributionService = {
-    getUserContributions: async (username: string) => { // UNUSED but probably will be useful
-        const res = await ContributionRepository.getUserContributions(username);
+    resolveUserIdByUsername: async (username: string): Promise<string> => {
+        return await UserService.getIdbyUsername(username);
+    },
+    getUserContributions: async (userId: string) => {
+        const res = await ContributionRepository.getUserContributions(userId);
         return { instituteContributions: res.rows };
     },
     getInstituteContributions: async (instituteId: string) => {
@@ -28,17 +31,17 @@ const ContributionService = {
         return { instituteContributions: res.rows };
     },
     getInstituteAndUserContributions: async (
-        username: string,
+        userId: string,
         institueId: string
     ) => {
         /*
             GETS:
             1. All institution related contributions.
-            2. All ACTIVE Contributions for the username 
+            2. All ACTIVE Contributions for the user
                                 (i.e assignedBlock !== -1 [ID_UNASSIGNED])
         */
         const res = await ContributionRepository.getUserAndInstContributions(
-            username,
+            userId,
             institueId
         );
 
@@ -46,7 +49,7 @@ const ContributionService = {
         let userContributions: Models.DefaultRow[] = [];
 
         res.rows.forEach(row => {
-            if (row.assignedBlock !== ID_UNASSIGNED && row.username === username) {
+            if (row.assignedBlock !== ID_UNASSIGNED && row.user === userId) {
                 userContributions.push(row);
             }
             if (row.instituteId === institueId) {
@@ -59,7 +62,7 @@ const ContributionService = {
             userContributions
         };
     },
-    getUserAndExpiredRows: async (username: string, instituteId: string): Promise<{
+    getUserAndExpiredRows: async (userId: string, instituteId: string): Promise<{
         user: ContributionRow | undefined,
         expired: ContributionRow[],
         institute: ContributionRow[]
@@ -73,7 +76,7 @@ const ContributionService = {
             // POSSIBLE BUG: This logic is questionably but consistent with previous implementation
             // I mean the SECONDS.HalfHour one and not > 0 [You're allowing way too much buffer time / protection ahead of expirty]
             const expired = (now - c.leaseExpiresAt) > timeUnits.SECONDSFOR.HalfHour;
-            if (c.username === username) contributorRow = c;
+            if (c.user === userId) contributorRow = c;
             else if (expired && c.assignedBlock !== -1)
                 expiredContributionRows.push(c);
         });
@@ -85,14 +88,12 @@ const ContributionService = {
         };
     },
     createContribution: async (
-        username: string,
-        uid: string,
+        userId: string,
         instituteId: string,
     ) => {
         const now = Math.floor(Date.now() / 1000);
         const data: Partial<ContributionRow> = {
-            username,
-            uid,
+            user: userId,
             instituteId,
             seconds: 0,
             students: 0,
@@ -211,11 +212,16 @@ const ContributionService = {
             freeBlockId,
         };
     },
-    revokeAssignedBlockFromExpired: async (cid: string, uid: string, prevBlockId: number) => {
+    resolveUserId: (contribution: ContributionRow): string => {
+        if (typeof contribution.user === 'string') return contribution.user;
+        if (contribution.user && typeof contribution.user === 'object') return contribution.user.$id;
+        throw new ApiError(500, "Contribution has no linked user");
+    },
+    revokeAssignedBlockFromExpired: async (cid: string, userId: string, prevBlockId: number) => {
         // contribution row related to block.
         const cRow = await ContributionRepository.updateAssignedBlock(cid, prevBlockId, ID_UNASSIGNED, true);
         if (!cRow) return { success: false }; // Race condition or appwrite level issue. Handled eitherway.
-        await UserService.UpdateUserState(uid, 'idle');
+        await UserService.UpdateUserState(userId, 'idle');
         return { success: true };
     },
     stealExpiredBlock: async (expiredContributors: ContributionRow[], blocks: number[]) => {
@@ -226,10 +232,11 @@ const ContributionService = {
             let randomIdx = getRandomIdx(expiredContributors);
             freeBlockId = expiredContributors[randomIdx].assignedBlock;
 
-            const { uid, $id } = expiredContributors[randomIdx];
+            const userId = ContributionService.resolveUserId(expiredContributors[randomIdx]);
+            const { $id } = expiredContributors[randomIdx];
 
             isBlockAllocated = (await ContributionService.revokeAssignedBlockFromExpired(
-                $id, uid, freeBlockId
+                $id, userId, freeBlockId
             )).success;
 
             if (!isBlockAllocated) {
@@ -292,11 +299,11 @@ const ContributionService = {
             }
         );
 
-        // Declare them as active, if they weren't.
-        await UserService.UpdateUserState(contributor.uid, 'active');
+        const contributorUserId = ContributionService.resolveUserId(contributor);
+        await UserService.UpdateUserState(contributorUserId, 'active');
 
         return {
-            success: true, // This is just for semantic communication purpose via code and not used for now.
+            success: true,
             startingPage: allocationRes.startingPage,
             endingPage: allocationRes.endingPage,
             blocks: allocationRes.blocks,
@@ -305,7 +312,6 @@ const ContributionService = {
         };
     },
     handleContribution: async (
-        username: string,
         userId: string,
         instituteId: string
     ) => {
@@ -323,9 +329,9 @@ const ContributionService = {
             throw new ApiError(409, "No students left to scrape");
         }
 
-        const contributionRows = await ContributionService.getUserAndExpiredRows(username, instituteId);
+        const contributionRows = await ContributionService.getUserAndExpiredRows(userId, instituteId);
         if (contributionRows.user == null) {
-            contributionRows.user = await ContributionService.createContribution(username, userId, instituteId);
+            contributionRows.user = await ContributionService.createContribution(userId, instituteId);
         }
 
         const allocationRes = await ContributionService.handleBlocks(
@@ -393,11 +399,11 @@ const ContributionService = {
         }
     },
     stopContribution: async (
-        username: string,
+        userId: string,
         instituteId: string,
         sessionId: string
     ) => {
-        const res = await ContributionRepository.getUserRelatedInstContribution(username, instituteId);
+        const res = await ContributionRepository.getUserRelatedInstContribution(userId, instituteId);
         if (res.total === 0)
             throw new ApiError(404, "No session found for this institue.");
 

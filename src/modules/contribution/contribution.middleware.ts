@@ -7,16 +7,17 @@ import { Request, Response, NextFunction } from "express";
 const ContributionMiddlewares = {
     preventMultiple: async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const { username } = res.locals.from.middlewares.handleAuth;
+            const { userId } = res.locals.from.middlewares.handleAuth;
             const { instituteId } = req.body;
 
-            const contributions = (await ContributionService.getUserContributions(username)).instituteContributions;
+            const contributions = (await ContributionService.getUserContributions(userId)).instituteContributions;
 
             if (contributions.length > 0) {
                 contributions.forEach(c => {
                     if (c.instituteId !== instituteId && c.assignedBlock !== ID_UNASSIGNED)
                         throw new ApiError(403, "Existing scrapping instance is active.");
 
+                    // TODO: Identify if this passed data is used elsewhere and remove if not.
                     if (c.assignedBlock !== ID_UNASSIGNED && c.instituteId === instituteId) {
                         res.locals.from.middlewares.userContributionId = c.$id;
                     }

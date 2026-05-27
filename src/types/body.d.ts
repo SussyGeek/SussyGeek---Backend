@@ -35,7 +35,6 @@ export interface BatchBody {
 
 export type ContributionBody = {
     instituteId: string,
-    username: string,
     students: BatchBody[],
     seconds: number
 }
