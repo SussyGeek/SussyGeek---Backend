@@ -71,9 +71,8 @@ const ContributionService = {
 
         contributions.forEach(c => {
             const now = Math.floor(Date.now() / 1000);
-            // POSSIBLE BUG: This logic is questionably but consistent with previous implementation
-            // I mean the SECONDS.HalfHour one and not > 0 [You're allowing way too much buffer time / protection ahead of expirty]
-            const expired = (now - c.leaseExpiresAt) > timeUnits.SECONDSFOR.HalfHour;
+            const expired = (now - c.leaseExpiresAt) > timeUnits.SECONDSFOR.FIVEMINS;
+
             if (c.user === userId) contributorRow = c;
             else if (expired && c.assignedBlock !== -1)
                 expiredContributionRows.push(c);

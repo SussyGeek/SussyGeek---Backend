@@ -8,6 +8,7 @@ export const randomSleep = async (baseScale: number, variation: number) => {
 export const timeUnits = {
     SECONDSFOR: {
         HalfHour: 1800,
-        Hour: 3600
+        Hour: 3600,
+        FIVEMINS: 500
     }
 }
