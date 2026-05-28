@@ -1,9 +1,12 @@
 import { ID, Models, Query } from "node-appwrite";
 import { appwriteConfig } from "../../database/appwrite/config";
 import { database } from "../../database/appwrite/instance";
+import { getRedis } from "../../database/redis/instance";
 import { ContributionRow } from "../../types/models/contribution";
 import { ID_UNASSIGNED } from "../../data/params";
 import { randomSleep } from "../../utils/timeUtils";
+
+const LOCK_TTL = 5; // seconds
 
 
 
@@ -74,42 +77,72 @@ const ContributionRepository = {
     },
     // Provide the time in seconds not MS.
     extendLease: async (id: string, baseTime: number, extensionTime: number, preventRace = false) => {
-        const queries = [Query.equal('$id', id)];
-        if (preventRace) queries.push(Query.notEqual('assignedBlock', -1));
-        return await database.updateRows({
+        if (preventRace) {
+            const redis = await getRedis();
+            const lockKey = `lock:contrib:${id}`;
+            const acquired = await redis.set(lockKey, '1', { EX: LOCK_TTL, NX: true });
+            if (!acquired) return { total: 0, rows: [] };
+            try {
+                const row = await database.getRow({
+                    databaseId: appwriteConfig.databaseId,
+                    tableId: appwriteConfig.contributionsTableId,
+                    rowId: id,
+                    queries: [Query.select(['assignedBlock'])]
+                });
+                if (row.assignedBlock === ID_UNASSIGNED) return { total: 0, rows: [] };
+
+                const updated = await database.updateRow({
+                    databaseId: appwriteConfig.databaseId,
+                    tableId: appwriteConfig.contributionsTableId,
+                    rowId: id,
+                    data: { leaseExpiresAt: baseTime + extensionTime, lastHeartbeatAt: baseTime }
+                });
+                return { total: 1, rows: [updated] };
+            } finally {
+                await redis.del(lockKey);
+            }
+        }
+        const updated = await database.updateRow({
             databaseId: appwriteConfig.databaseId,
             tableId: appwriteConfig.contributionsTableId,
-            queries,
-            data: {
-                leaseExpiresAt: baseTime + extensionTime,
-                lastHeartbeatAt: baseTime
-            }
+            rowId: id,
+            data: { leaseExpiresAt: baseTime + extensionTime, lastHeartbeatAt: baseTime }
         });
+        return { total: 1, rows: [updated] };
     },
-    updateAssignedBlock: async ( // TODO: Split this function. One function = One responsibility.
+    updateAssignedBlock: async (
         id: string,
         prevBlockId: number,
         newBlockId: number,
         preventRace = false,
         recurAttempt = 0,
     ) => {
-        // NOTE: THis method isn't exposed as a backend API and only accessible via intermediate service call.
-        // Means provision of ContributionId is internally managed.
-
-        // In one scenario this is a critical operation.
-        // Hence the rollback to previous state upon failure.
+        // Not exposed as a backend API — ContributionId is internally managed.
+        // Rollback to previous state upon failure.
         try {
             if (preventRace) {
-                // Prevent race condition exclusively exists for revoking.
-                return (await database.updateRows({
-                    databaseId: appwriteConfig.databaseId,
-                    tableId: appwriteConfig.contributionsTableId,
-                    queries: [Query.and([
-                        Query.equal('$id', id),
-                        Query.notEqual('assignedBlock', ID_UNASSIGNED)
-                    ])],
-                    data: { assignedBlock: ID_UNASSIGNED } // CRUCIAAL NOTE: always ID_UNASSIGNED, unless stated otherwise in this comment.
-                })).rows[0] ?? null;
+                const redis = await getRedis();
+                const lockKey = `lock:contrib:${id}`;
+                const acquired = await redis.set(lockKey, '1', { EX: LOCK_TTL, NX: true });
+                if (!acquired) return null;
+                try {
+                    const row = await database.getRow({
+                        databaseId: appwriteConfig.databaseId,
+                        tableId: appwriteConfig.contributionsTableId,
+                        rowId: id,
+                        queries: [Query.select(['assignedBlock'])]
+                    });
+                    if (row.assignedBlock === ID_UNASSIGNED) return null;
+
+                    return await database.updateRow({
+                        databaseId: appwriteConfig.databaseId,
+                        tableId: appwriteConfig.contributionsTableId,
+                        rowId: id,
+                        data: { assignedBlock: ID_UNASSIGNED }
+                    });
+                } finally {
+                    await redis.del(lockKey);
+                }
             }
             else {
                 return await database.updateRow({
