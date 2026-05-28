@@ -15,7 +15,6 @@ import StudentService from "../student/student.service";
 import MetaService from "../meta/meta.service";
 import MetaRepository from "../meta/meta.repository";
 import { ApiError } from "../../errors/ApiError";
-import { HandleAuth } from "../../types/middlewareFields";
 
 
 const ContributionService = {
@@ -32,7 +31,7 @@ const ContributionService = {
     },
     getInstituteAndUserContributions: async (
         userId: string,
-        institueId: string
+        instituteId: string
     ) => {
         /*
             GETS:
@@ -42,17 +41,16 @@ const ContributionService = {
         */
         const res = await ContributionRepository.getUserAndInstContributions(
             userId,
-            institueId
+            instituteId
         );
 
         let instituteContributions: Models.DefaultRow[] = [];
         let userContributions: Models.DefaultRow[] = [];
-
         res.rows.forEach(row => {
-            if (row.assignedBlock !== ID_UNASSIGNED && row.user === userId) {
+            if (row.assignedBlock !== ID_UNASSIGNED && row.user.$id === userId) {
                 userContributions.push(row);
             }
-            if (row.instituteId === institueId) {
+            if (row.instituteId === instituteId) {
                 instituteContributions.push(row);
             }
         });

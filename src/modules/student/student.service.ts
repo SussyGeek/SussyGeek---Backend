@@ -1,6 +1,7 @@
 import GeeksForGeeksAPI from "../../api/geeksforgeeks.api";
 import { BatchBody } from "../../types/body";
 import { StudentRow } from "../../types/models/student";
+import { StudentRedis } from "../../types/students";
 import InstituteService from "../institute/institute.service";
 import StudentRepository from "./student.repository";
 
@@ -12,7 +13,7 @@ const StudentService = {
         }
         );
         await StudentRepository.addMultiple(students);
-        return { succes: true };
+        return { success: true };
     },
     cacheStudentUsernames: async (instituteId: string) => {
         const count = await GeeksForGeeksAPI.getTotalStudentCount(instituteId);
@@ -71,10 +72,20 @@ const StudentService = {
         fullName: string,
         instituteId: string
     ) => {
-        const { rows } = await StudentRepository.listByFullNameInInstitute(fullName, instituteId);
+        const { total, rows } = await StudentRepository.listByFullNameInInstitute(fullName, instituteId);
+
+        let users: StudentRedis[] = [];
+        if (total > 0) {
+            const studentIds = rows.map(r => r.$id);
+            const usersSerialized = await StudentRepository.redisSearchStudnetsOnHash(instituteId, studentIds);
+            // deserialized users.
+            users = usersSerialized
+                .map(u => u ? JSON.parse(u) : null)
+                .filter((u): u is StudentRedis => u !== null);
+        }
         return {
             success: true,
-            data: rows
+            data: users
         }
     },
     isBatchValid: async (instituteId: string, students: BatchBody[]) => {

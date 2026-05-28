@@ -40,10 +40,12 @@ const StudentRepository = {
         return await database.listRows({
             databaseId: appwriteConfig.databaseId,
             tableId: appwriteConfig.studentTableId,
-            queries: [Query.and([
-                Query.equal("institute", instituteId),
-                Query.search("name", fullName)
-            ])]
+            queries: [
+                Query.and([
+                    Query.equal("instituteId", instituteId),
+                    Query.search("name", fullName)]),
+                Query.select(["$id"])
+                ]
         });
     },
     addMultiple: async (data: Partial<StudentRow>[]) => {
@@ -92,6 +94,13 @@ const StudentRepository = {
             `institute:${instituteId}:scrapped`,
             users
         )
+    },
+    redisSearchStudnetsOnHash: async (
+        instituteId: string,
+        studentIds: string[]
+    ) => {
+        const redis = await getRedis();
+        return redis.hmGet(`institute:${instituteId}:data`, studentIds)
     }
 };
 

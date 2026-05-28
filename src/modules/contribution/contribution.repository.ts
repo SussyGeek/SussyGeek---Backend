@@ -29,10 +29,26 @@ const ContributionRepository = {
         return database.listRows({
             databaseId: appwriteConfig.databaseId,
             tableId: appwriteConfig.contributionsTableId,
-            queries: [Query.or([
-                Query.equal('instituteId', instituteId),
-                Query.equal('user', userId)
-            ])]
+            queries: [
+                Query.or([
+                    Query.equal('instituteId', instituteId),
+                    Query.equal('user', userId)
+                ]),
+                Query.select(
+                    [
+                        "$id",
+                        "seconds",
+                        "students",
+                        "leaseExpiresAt",
+                        "lastHeartbeatAt",
+                        "assignedBlock",
+                        "instituteId",
+                        "user.$id",
+                        "user.username"
+
+                    ]
+                )
+            ]
         });
     },
     getUserRelatedInstContribution: async (
