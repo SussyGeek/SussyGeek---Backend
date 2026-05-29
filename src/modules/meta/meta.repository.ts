@@ -37,6 +37,17 @@ const MetaRepository = {
             }
         });
     },
+    incrementDifference: async (data: Omit<MetaFieldTypes, "totalStudents">) => {
+        return await database.updateRow({
+            databaseId: appwriteConfig.databaseId,
+            tableId: appwriteConfig.metaTableId,
+            rowId: appwriteConfig.rowIds.meta,
+            data: {
+                totalScore: Operator.increment(data.totalScore),
+                totalProblems: Operator.increment(data.totalProblems),
+            }
+        });
+    },
     redisAddScores: async (
         data: ScoreAggreation,
         instituteId: string

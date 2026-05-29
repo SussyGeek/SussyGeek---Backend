@@ -35,7 +35,7 @@ const InstituteRepository = {
             queries: [Query.select(['blocks', 'blocksVersion'])]
         });
     },
-    listInstitutes: async (queries: string[]) => {
+    listInstitutes: async (queries: string[]): Promise<Models.RowList<InstituteRow>> => {
         return await database.listRows({
             databaseId: appwriteConfig.databaseId,
             tableId: appwriteConfig.institutionTableId,
@@ -93,7 +93,7 @@ const InstituteRepository = {
         });
     },
     // TODO: Move the type to a types/
-    incrementScoreAndProblems: async (id: string, data: { batchProblems: number, batchScore: number, studentCount: number }) => {
+    incrementScoreAndProblemsAndStudents: async (id: string, data: { batchProblems: number, batchScore: number, studentCount: number }) => {
         return await database.updateRow({
             databaseId: appwriteConfig.databaseId,
             tableId: appwriteConfig.institutionTableId,
@@ -104,8 +104,18 @@ const InstituteRepository = {
                 problemsSolved: Operator.increment(data.batchProblems)
             }
         });
+    },
+    updateCounter: async (id: string, counterData: Partial<InstituteRow>) => {
+        return await database.updateRow({
+            databaseId: appwriteConfig.databaseId,
+            tableId: appwriteConfig.institutionTableId,
+            rowId: id,
+            data: {
+                score: counterData.score,
+                problemsSolved: counterData.problemsSolved
+            }
+        });
     }
-
 }
 
 export default InstituteRepository;

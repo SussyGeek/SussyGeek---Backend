@@ -31,6 +31,8 @@ export const aggregateScore = (batch: StudentBody[]) => {
 
   const hashData: Record<string, string> = {};
 
+  const serializedStudentIds: string[] = [];
+ 
   batch.forEach(student => {
     // For Appwrite
     studentRows.push({
@@ -40,6 +42,11 @@ export const aggregateScore = (batch: StudentBody[]) => {
       username: student.username,
       name: student.name
     });
+
+    serializedStudentIds.push(JSON.stringify({ 
+      username: student.username, 
+      user_id: student.$id 
+    }));
 
     // For hash based storage
     const stats = JSON.stringify({
@@ -67,8 +74,6 @@ export const aggregateScore = (batch: StudentBody[]) => {
       streakArr,
       solvedArr
     },
-    serializedStudentIds: studentRows.map(
-      sRow => JSON.stringify({ username: sRow.username, user_id: sRow.$id })
-    )
+    serializedStudentIds
   }
 }

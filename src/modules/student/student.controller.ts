@@ -48,6 +48,14 @@ const StudentController = {
         } catch (err) {
             next(err);
         }
+    },
+    updateStudentData: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { instituteId } = req.params;
+            
+        } catch (err) {
+            next(err);
+        }
     }
 };
 

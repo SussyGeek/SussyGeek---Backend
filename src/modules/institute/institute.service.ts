@@ -38,8 +38,7 @@ const InstituteService = {
         offset: number,
         omitInfo = true
     ) => {
-        let data: Models.RowList<InstituteRow>;
-        let ans;
+        let ans: Models.RowList<InstituteRow>;
         // TODO: Omit sensitive info like Institute ID and stuff.
         if (name.trim() || !id.trim()) {
             const queries = makeQueries(
@@ -111,6 +110,8 @@ const InstituteService = {
             blocks
         };
     },
+    // TODO: Rename to incrementScoreAndProblemsAndStudents
+    // For studenr batch increments.
     incrementScoreAndProblems: async (instituteId: string, students: StudentBody[]) => {
         const data = students.reduce((acc, student) => (
             {
@@ -122,9 +123,15 @@ const InstituteService = {
 
         data.studentCount = students.length;
 
-        await InstituteRepository.incrementScoreAndProblems(instituteId, data);
+        // !This updates scrappedStudent count, not totalStudents
+        await InstituteRepository.incrementScoreAndProblemsAndStudents(instituteId, data);
 
         return { success: true, data };
+    },
+    // For grand updation across all students.
+    updateScoreAndProblems: async (instituteId: string, counterData: Partial<InstituteRow>) => {
+        await InstituteRepository.updateCounter(instituteId, counterData);
+        return { success: true };
     },
     assignBlocks: async (
         instituteId: string,

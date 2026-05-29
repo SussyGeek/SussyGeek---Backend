@@ -1,8 +1,10 @@
 import GeeksForGeeksAPI from "../../api/geeksforgeeks.api";
 import { BatchBody } from "../../types/body";
+import { GFGStudentStats } from "../../types/gfg_api";
 import { StudentRow } from "../../types/models/student";
-import { StudentRedis } from "../../types/students";
+import { CounterDataObject, StudentRedis } from "../../types/students";
 import InstituteService from "../institute/institute.service";
+import MetaService from "../meta/meta.service";
 import StudentRepository from "./student.repository";
 
 const StudentService = {
@@ -97,6 +99,83 @@ const StudentService = {
         const users = students.map(s => JSON.stringify({ username: s.username, user_id: Number(s.id) }));
         const result = await StudentRepository.redisScrappedMembershipCheck(instituteId, users);
         return result.some(r => r === 1);
+    },
+    updateStudentScores: async (
+        instituteId: string
+    ) => {
+
+        // Get fresh student list from GFG.
+        const totalStudents = await GeeksForGeeksAPI.getTotalStudentCount(instituteId);
+        const studentList = await GeeksForGeeksAPI.getStudentsByInstitute(instituteId, totalStudents);
+
+        const serializedStudents: string[] = []; // For querying scrapped student hash.
+        const studentIds: Record<string, string[]> = {
+            existing: [], // For score updation.
+            new: [], // For block extension.
+            all: [] // For querying appwrite student rows.
+        }
+
+        studentList.forEach(s => {
+            studentIds.all.push(s.user_id.toString());
+
+            serializedStudents.push(JSON.stringify({
+                username: s.handle,
+                user_id: s.user_id
+            }));
+        });
+
+        const counterData: CounterDataObject = {
+            sets: { solved: [], streak: [], scores: [] },
+            total: { problemsSolved: 0, score: 0 } // For appwrite institute row.
+        };
+
+        const hashDataSerialized: Record<string, string> = {};
+        const studentExists = await StudentRepository.redisScrappedMembershipCheck(instituteId, serializedStudents);
+        const { data: appwriteStudentRows } = await StudentService.listStudentsByUserIds(studentIds.all);
+
+        const appwriteNameMap = new Map(appwriteStudentRows.map(row => [
+            row.$id,
+            row.name
+        ]))
+
+        studentList.forEach((s: GFGStudentStats, idx: number) => {
+            const userIdStr = s.user_id.toString();
+            if(studentExists[idx]) {
+                studentIds.existing.push(userIdStr);
+
+                // This total data is computed for Institutional counter update
+                // And difference obtaining for metadata increment.
+                counterData.total.problemsSolved += s.total_problems_solved;
+                counterData.total.score += s.coding_score;
+
+                // For our Redis sets.
+                counterData.sets.scores.push({ score: s.coding_score, value: userIdStr });
+                counterData.sets.solved.push({ score: s.total_problems_solved, value: userIdStr });
+                counterData.sets.streak.push({ score: s.potd_longest_streak, value: userIdStr });
+
+                hashDataSerialized[userIdStr] = JSON.stringify({ 
+                    name: appwriteNameMap.get(userIdStr) ?? s.handle,
+                    username: s.handle,
+                    score: s.coding_score,
+                    solved: s.total_problems_solved,
+                    streak: s.potd_longest_streak
+                });
+            } else {
+                studentIds.new.push(userIdStr);
+            }
+        });
+
+        const institute = (await InstituteService.getInstitute(instituteId, '', 1, 1, 0, false)).rows[0];
+
+        const counterDifference = {
+            totalScore: counterData.total.score - institute.score,
+            totalProblems: counterData.total.problemsSolved - institute.problemsSolved
+        };
+        await MetaService.incrementDifference(counterDifference);
+
+        await InstituteService.updateScoreAndProblems(instituteId, counterData.total);
+        // TODO: Pending updation on Redis.
+
     }
 };
 

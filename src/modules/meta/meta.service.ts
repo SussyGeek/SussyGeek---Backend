@@ -17,6 +17,10 @@ const MetaService = {
     incrementAll: async (data: MetaFieldTypes) => {
         await MetaRepository.incrementAllFields(data);
         return { success: true };
+    },
+    incrementDifference: async (data: Omit<MetaFieldTypes, "totalStudents">) => {
+        await MetaRepository.incrementDifference(data);
+        return { success: true };
     }
 };
 

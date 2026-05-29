@@ -2,7 +2,7 @@ import { database } from "../../database/appwrite/instance";
 import { appwriteConfig } from "../../database/appwrite/config";
 import { getRedis } from "../../database/redis/instance";
 import { StudentRow } from "../../types/models/student";
-import { Query } from "node-appwrite";
+import { Models, Query } from "node-appwrite";
 
 const StudentRepository = {
     listStudents: async (
@@ -23,7 +23,7 @@ const StudentRepository = {
     },
     listStudentsByIds: async (
         studentIds: string[]
-    ) => {
+    ): Promise<Models.RowList<StudentRow>> => {
         return await database.listRows({
             databaseId: appwriteConfig.databaseId,
             tableId: appwriteConfig.studentTableId,
