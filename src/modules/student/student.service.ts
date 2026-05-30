@@ -1,6 +1,8 @@
 import GeeksForGeeksAPI from "../../api/geeksforgeeks.api";
+import { ApiError } from "../../errors/ApiError";
 import { BatchBody } from "../../types/body";
 import { GFGStudentStats } from "../../types/gfg_api";
+import { InstituteRow } from "../../types/models/institute";
 import { StudentRow } from "../../types/models/student";
 import { CounterDataObject, StudentRedis } from "../../types/students";
 import InstituteService from "../institute/institute.service";
@@ -101,8 +103,13 @@ const StudentService = {
         return result.some(r => r === 1);
     },
     updateStudentScores: async (
-        instituteId: string
+        instituteId: string,
+        institute: InstituteRow | null
     ) => {
+        institute = institute ?? (await InstituteService.getInstitute(instituteId, '', 1, 1, 0, false)).rows[0];
+        if (institute.totalStudents !== institute.scrappedStudents) {
+            throw new ApiError(409, "Institute has partial contributions. Can't be updated.");
+        }
 
         // Get fresh student list from GFG.
         const totalStudents = await GeeksForGeeksAPI.getTotalStudentCount(instituteId);
@@ -111,9 +118,9 @@ const StudentService = {
         const serializedStudents: string[] = []; // For querying scrapped student hash.
         const studentIds: Record<string, string[]> = {
             existing: [], // For score updation.
-            new: [], // For block extension.
             all: [] // For querying appwrite student rows.
         }
+        const newStudentsList: GFGStudentStats[] = []; // This data is used for extension logic.
 
         studentList.forEach(s => {
             studentIds.all.push(s.user_id.toString());
@@ -136,11 +143,11 @@ const StudentService = {
         const appwriteNameMap = new Map(appwriteStudentRows.map(row => [
             row.$id,
             row.name
-        ]))
+        ]));
 
         studentList.forEach((s: GFGStudentStats, idx: number) => {
             const userIdStr = s.user_id.toString();
-            if(studentExists[idx]) {
+            if (studentExists[idx]) {
                 studentIds.existing.push(userIdStr);
 
                 // This total data is computed for Institutional counter update
@@ -153,19 +160,17 @@ const StudentService = {
                 counterData.sets.solved.push({ score: s.total_problems_solved, value: userIdStr });
                 counterData.sets.streak.push({ score: s.potd_longest_streak, value: userIdStr });
 
-                hashDataSerialized[userIdStr] = JSON.stringify({ 
-                    name: appwriteNameMap.get(userIdStr) ?? s.handle,
+                hashDataSerialized[userIdStr] = JSON.stringify({
                     username: s.handle,
+                    name: appwriteNameMap.get(userIdStr) ?? s.handle,
                     score: s.coding_score,
                     solved: s.total_problems_solved,
                     streak: s.potd_longest_streak
                 });
             } else {
-                studentIds.new.push(userIdStr);
+                newStudentsList.push(s);
             }
         });
-
-        const institute = (await InstituteService.getInstitute(instituteId, '', 1, 1, 0, false)).rows[0];
 
         const counterDifference = {
             totalScore: counterData.total.score - institute.score,
@@ -174,8 +179,13 @@ const StudentService = {
         await MetaService.incrementDifference(counterDifference);
 
         await InstituteService.updateScoreAndProblems(instituteId, counterData.total);
-        // TODO: Pending updation on Redis.
+        await StudentRepository.redisUpdateScores(instituteId, counterData.sets, hashDataSerialized);
 
+        return {
+            success: true,
+            message: "Score updated",
+            newStudentsList,
+        };
     }
 };
 

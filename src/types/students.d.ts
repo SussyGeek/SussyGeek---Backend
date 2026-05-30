@@ -8,14 +8,21 @@ export type StudentRedis = {
     streak: number
 };
 
+export type CounterSetObject = {
+    solved: RedisHashObjectType[]
+    streak: RedisHashObjectType[]
+    scores: RedisHashObjectType[]
+}
+
 export type CounterDataObject = {
-    sets: {
-        solved: RedisHashObjectType[],
-        streak: RedisHashObjectType[],
-        scores: RedisHashObjectType[]
-    },
+    sets: CounterSetObject,
     total: {
         problemsSolved: number,
         score: number
     }
+};
+
+export type serializedStudentData = {
+    list: string[],
+    set: string[]
 };

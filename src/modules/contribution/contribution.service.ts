@@ -377,7 +377,8 @@ const ContributionService = {
             contributor, isBlockComplete, studentCount, seconds, assignedBlock
         )).contributionRow;
 
-        const { data: aggregated } = await InstituteService.incrementScoreAndProblems(institute.$id, batch);
+        // incrmenets totalScrapped and not totalStudents at Redis.
+        const { data: aggregated } = await InstituteService.incrementScoreAndProblemsAndStudents(institute.$id, batch);
         await MetaService.incrementAll({
             totalProblems: aggregated.batchProblems,
             totalScore: aggregated.batchScore,

@@ -52,7 +52,11 @@ const StudentController = {
     updateStudentData: async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { instituteId } = req.params;
-            
+            const result = await StudentService.updateStudentScores(instituteId, null);
+            return res.json({
+                success: result.success,
+                message: result.message
+            });
         } catch (err) {
             next(err);
         }

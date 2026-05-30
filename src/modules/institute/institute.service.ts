@@ -9,6 +9,9 @@ import { StudentBody } from "../../types/body";
 import { ApiError } from "../../errors/ApiError";
 import GeeksForGeeksAPI from "../../api/geeksforgeeks.api";
 import { makeQueries } from "../../utils/makeQueries";
+import StudentService from "../student/student.service";
+import StudentRepository from "../student/student.repository";
+import { serializedStudentData } from "../../types/students";
 
 
 const InstituteService = {
@@ -110,9 +113,8 @@ const InstituteService = {
             blocks
         };
     },
-    // TODO: Rename to incrementScoreAndProblemsAndStudents
     // For studenr batch increments.
-    incrementScoreAndProblems: async (instituteId: string, students: StudentBody[]) => {
+    incrementScoreAndProblemsAndStudents: async (instituteId: string, students: StudentBody[]) => {
         const data = students.reduce((acc, student) => (
             {
                 batchScore: acc.batchScore + student.score,
@@ -181,7 +183,7 @@ const InstituteService = {
     hasBlockCompleted: async (blockId: number, prevStartingPage: number, studentCount: number, institute: InstituteRow | null, instituteId: string) => {
         const blocks = (institute || await InstituteService.getBlocks(instituteId)).blocks;
         const newStartingPage = prevStartingPage + studentCount;
-        return newStartingPage >= blocks[blockId + 2]; 
+        return newStartingPage >= blocks[blockId + 2];
     },
     updateUserCacheStatus: async (
         instituteId: string,
@@ -192,6 +194,59 @@ const InstituteService = {
         });
 
         return { success: true, institute };
+    },
+    // NOTE: This method is only to be used when an institute is fully scrapped.
+    extendBlocks: async (
+        instituteId: string
+    ) => {
+        const institute = (await InstituteService.getInstitute(instituteId, '', 1, 1, 0, false)).rows[0];
+
+        if (institute.totalStudents !== institute.scrappedStudents)
+            return { success: false, message: "Partial contributions. Not updatable" };
+
+        const { newStudentsList } = await StudentService.updateStudentScores(instituteId, institute);
+        if (newStudentsList.length === 0)
+            return { success: true, message: "No new students to extend blocks. Student list updated." };
+
+        const serializedData: serializedStudentData = {
+            list: [],
+            set: []
+        };
+
+        newStudentsList.forEach(s => {
+            serializedData.list.push(JSON.stringify({ handle: s.handle, user_id: s.user_id }));
+            serializedData.set.push(JSON.stringify({ username: s.handle, user_id: s.user_id }));
+        });
+
+        await StudentRepository.redisExtendListAndCacheSet(instituteId, serializedData);
+
+        const { blocks, blocksVersion } = institute;
+        const newTotal = institute.totalStudents + newStudentsList.length;
+        const blockPages = STUDENT_BATCH_SIZE * BLOCK;
+        const lastEndPage = blocks.length >= 3 ? blocks[blocks.length - 1] : 0;
+        const newBlockCount = Math.ceil((newTotal - lastEndPage) / blockPages);
+
+        for (let b = 0; b < newBlockCount; b++) {
+            const startPage = lastEndPage + (blockPages * b) + 1;
+            const endPage = Math.min(
+                lastEndPage + blockPages * (b + 1),
+                newTotal
+            );
+            blocks.push(BLOCK_STATE['FREE'], startPage, endPage);
+        }
+
+        // No race condition will occur here as there aren't any active scrappers
+        // due to institute being already scrapped.
+        await InstituteRepository.updateInstituteById(
+            instituteId,
+            {
+                totalStudents: newTotal,
+                blocks: blocks,
+                blocksVersion: blocksVersion + 1
+            }
+        );
+
+        return { success: true, message: "Institute blocks extended" };
     }
 };
 

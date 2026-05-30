@@ -3,6 +3,7 @@ import { appwriteConfig } from "../../database/appwrite/config";
 import { getRedis } from "../../database/redis/instance";
 import { StudentRow } from "../../types/models/student";
 import { Models, Query } from "node-appwrite";
+import { CounterSetObject, serializedStudentData } from "../../types/students";
 
 const StudentRepository = {
     listStudents: async (
@@ -45,7 +46,7 @@ const StudentRepository = {
                     Query.equal("instituteId", instituteId),
                     Query.search("name", fullName)]),
                 Query.select(["$id"])
-                ]
+            ]
         });
     },
     addMultiple: async (data: Partial<StudentRow>[]) => {
@@ -68,6 +69,17 @@ const StudentRepository = {
     ) => {
         const redis = await getRedis();
         return await redis.rPush(`institute:${instituteId}:students`, students);
+    },
+    redisExtendListAndCacheSet: async (
+        instituteId: string,
+        data: serializedStudentData
+    ) => {
+        const redis = await getRedis();
+        await redis
+            .multi()
+            .sAdd(`institute:${instituteId}:users`, data.set)
+            .rPush(`institute:${instituteId}:students`, data.list)
+            .exec();
     },
     redisGetOrderedStudentList: async (
         instituteId: string
@@ -101,7 +113,27 @@ const StudentRepository = {
     ) => {
         const redis = await getRedis();
         return redis.hmGet(`institute:${instituteId}:data`, studentIds)
+    },
+    // NOTE: This method is only used
+    // For institutional wide score updates
+    // Not batch submissions, batch updations.
+    redisUpdateScores: async (
+        instituteId: string,
+        counterSets: CounterSetObject,
+        hashMap: Record<string, string>
+    ) => {
+        const redis = await getRedis();
+        await redis
+            .multi()
+            .hset(`institute:${instituteId}:data`, hashMap)
+            .zAdd('global:scores', counterSets.scores)
+            .zAdd('global:solved', counterSets.solved)
+            .zAdd('global:streaks', counterSets.streak)
+            .zAdd(`institute:${instituteId}:solved`, counterSets.solved)
+            .zAdd(`institute:${instituteId}:streaks`, counterSets.streak)
+            .zAdd(`institute:${instituteId}:scores`, counterSets.scores)
+            .exec()
     }
-};
+}
 
 export default StudentRepository;
