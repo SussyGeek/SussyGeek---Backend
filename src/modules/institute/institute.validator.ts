@@ -23,5 +23,12 @@ export const InstituteValidator = {
         params: z.object({
             id: z.string().nonoptional()
         })
+    },
+    findAvailability: {
+        params: z.object({
+            instituteId: z.string()
+                .nonoptional()
+                .refine(id => id !== "undefined", "Invalid institute id.")
+        })
     }
 }

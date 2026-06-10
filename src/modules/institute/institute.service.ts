@@ -54,6 +54,10 @@ const InstituteService = {
         }
         return ans;
     },
+    findAvailabilityById: async (instituteId: string) => {
+        const row = await InstituteRepository.findAvailability(instituteId);
+        return row.scrappedStudents === row.totalStudents;
+    },
     // updates counter for totalStudents
     updateTotalStudents: async (instId: string) => {
 

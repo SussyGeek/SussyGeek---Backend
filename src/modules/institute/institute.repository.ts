@@ -24,7 +24,20 @@ const InstituteRepository = {
                 rowId: id,
             });
         } catch (err) {
-            throw new ApiError(400, 'Institute non-existant');
+            throw new ApiError(404, 'Institute non-existant');
+        }
+    },
+    findAvailability: async (id: string): Promise<Partial<InstituteRow>> => {
+        try {
+            const row = await database.getRow({
+                databaseId: appwriteConfig.databaseId,
+                tableId: appwriteConfig.institutionTableId,
+                rowId: id,
+                queries: [Query.select(['scrappedStudents', 'totalStudents'])]
+            });
+            return row;
+        } catch (err) {
+            throw new ApiError(404, 'Institute non-existant');
         }
     },
     getBlocksByInstId: async (id: string): Promise<InstituteRow> => {

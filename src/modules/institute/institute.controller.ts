@@ -56,6 +56,19 @@ const instituteController = {
             next(err);
         }
     },
+    findAvailabilityById: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { instituteId } = req.params as unknown as { instituteId: string };
+            console.log(instituteId);
+            const data = await InstituteService.findAvailabilityById(instituteId);
+            return res.json({
+                success: true,
+                data: { availability: data }
+            });
+        } catch (err) {
+            next(err);
+        }
+    },
     updateStudentCount: async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { id } = req.params;

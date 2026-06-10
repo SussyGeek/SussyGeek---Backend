@@ -5,17 +5,21 @@ import instituteController from './institute.controller';
 
 const router = express.Router();
 
-// This endpoint will be deprecated.
-router.post('/add',
-    validate(InstituteValidator.addInstitute),
-    // TODO: New middleware that checks if institute exists.
-    instituteController.addInstitute
-);
+// This endpoint will be removed in future!
+// router.post('/add',
+//     validate(InstituteValidator.addInstitute),
+//     // TODO: New middleware that checks if institute exists.
+//     instituteController.addInstitute
+// );
+
 router.get('/list',
     validate(InstituteValidator.getInstitute),
     instituteController.getInstitute
 );
-
+router.get('/availability/:instituteId',
+    validate(InstituteValidator.findAvailability),
+    instituteController.findAvailabilityById
+);
 
 
 // This is unused for now. TODO: Decide on it in future. -- OLD COMMENT
