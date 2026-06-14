@@ -48,19 +48,56 @@ const StudentService = {
     listRegularStudents: async (
         instituteId: string,
         pageNo: number,
-        pageSize: number = 10
+        pageSize: number = 10,
+        showCounters?: number
     ) => {
         const pageOffset = pageNo - 1;
-
         const res = await StudentRepository.listStudents(
             instituteId,
             pageOffset,
             pageSize
         );
 
+        let students = res.rows;
+
+        if (showCounters === 1 && students.length > 0) {
+            const studentIds = students.map(s => s.$id);
+            const usersSerialized = await StudentRepository.redisSearchStudnetsOnHash(instituteId, studentIds);
+            
+            // @ts-ignore
+            students = students.map((s, i) => {
+                const serialized = usersSerialized[i];
+                if (serialized) {
+                    const parsed = JSON.parse(serialized);
+                    return { ...s, ...parsed, $id: s.$id };
+                }
+                return s;
+            });
+        }
+
         return {
             success: true,
-            data: { students: res.rows }
+            data: { students }
+        };
+    },
+    listSortedStudents: async (
+        instituteId: string,
+        sortBy: 'score' | 'solved' | 'streak',
+        order: 'asc' | 'desc',
+        pageNo: number,
+        pageSize: number = 100
+    ) => {
+        const students = await StudentRepository.redisGetSortedStudents(
+            instituteId,
+            sortBy,
+            order,
+            pageNo,
+            pageSize
+        );
+
+        return {
+            success: true,
+            data: { students }
         };
     },
     listStudentsByUserIds: async (
@@ -83,8 +120,16 @@ const StudentService = {
             const studentIds = rows.map(r => r.$id);
             const usersSerialized = await StudentRepository.redisSearchStudnetsOnHash(instituteId, studentIds);
             // deserialized users.
+            // @ts-ignore
             users = usersSerialized
-                .map(u => u ? JSON.parse(u) : null)
+                .map((u, i) => {
+                    if (u) {
+                        const parsed = JSON.parse(u);
+                        parsed.$id = studentIds[i];
+                        return parsed;
+                    }
+                    return null;
+                })
                 .filter((u): u is StudentRedis => u !== null);
         }
         return {

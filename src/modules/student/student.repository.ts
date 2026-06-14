@@ -133,6 +133,40 @@ const StudentRepository = {
             .zAdd(`institute:${instituteId}:streaks`, counterSets.streak)
             .zAdd(`institute:${instituteId}:scores`, counterSets.scores)
             .exec()
+    },
+    redisGetSortedStudents: async (
+        instituteId: string,
+        sortBy: 'score' | 'solved' | 'streak',
+        order: 'asc' | 'desc',
+        pageNo: number,
+        pageSize: number
+    ) => {
+        const redis = await getRedis();
+        const start = (pageNo - 1) * pageSize;
+        const end = start + pageSize - 1;
+        const key = sortBy === 'score' ? `institute:${instituteId}:scores` :
+                    sortBy === 'solved' ? `institute:${instituteId}:solved` :
+                    `institute:${instituteId}:streaks`;
+        
+        let studentIds: string[];
+        if (order === 'desc') {
+            studentIds = await redis.zRange(key, start, end, { REV: true });
+        } else {
+            studentIds = await redis.zRange(key, start, end);
+        }
+        
+        if (!studentIds || studentIds.length === 0) return [];
+        
+        const rawData = await redis.hmGet(`institute:${instituteId}:data`, studentIds);
+        
+        const parsed = rawData.map((d, i) => {
+            if (!d) return null;
+            const parsedObj = JSON.parse(d);
+            parsedObj.$id = studentIds[i];
+            return parsedObj;
+        }).filter(Boolean);
+        
+        return parsed;
     }
 }
 

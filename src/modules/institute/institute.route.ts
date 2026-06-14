@@ -12,9 +12,14 @@ const router = express.Router();
 //     instituteController.addInstitute
 // );
 
+
 router.get('/list',
     validate(InstituteValidator.getInstitute),
     instituteController.getInstitute
+);
+router.get('/search',
+    validate(InstituteValidator.searchInstitutes),
+    instituteController.searchInstitutes
 );
 router.get('/availability/:instituteId',
     validate(InstituteValidator.findAvailability),

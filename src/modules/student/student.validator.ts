@@ -8,7 +8,18 @@ const StudentValidator = {
     },
     listRegularStudents: {
         query: z.object({
-            pageNo: z.coerce.number().nonnegative()
+            pageNo: z.coerce.number().nonnegative(),
+            showCounters: z.coerce.number().optional()
+        }),
+        params: z.object({
+            instituteId: z.string().nonempty()
+        })
+    },
+    listSortedStudents: {
+        query: z.object({
+            pageNo: z.coerce.number().nonnegative(),
+            sortBy: z.enum(['score', 'solved', 'streak']),
+            order: z.enum(['asc', 'desc'])
         }),
         params: z.object({
             instituteId: z.string().nonempty()

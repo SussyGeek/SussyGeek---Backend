@@ -15,10 +15,22 @@ const StudentController = {
     listRegularStudents: async (req: Request, res: Response, next: NextFunction) => {
         try {
             // TODO: This is temporary solution for ts. Find better
-            const { pageNo } = req.query as unknown as { pageNo: number };
+            const { pageNo, showCounters } = req.query as unknown as { pageNo: number, showCounters?: number };
             const { instituteId } = req.params;
 
-            const result = await StudentService.listRegularStudents(instituteId, pageNo, 10);
+            const result = await StudentService.listRegularStudents(instituteId, pageNo, 100, showCounters);
+
+            return res.json(result);
+        } catch (err) {
+            next(err);
+        }
+    },
+    listSortedStudents: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { pageNo, sortBy, order } = req.query as unknown as { pageNo: number, sortBy: 'score' | 'solved' | 'streak', order: 'asc' | 'desc' };
+            const { instituteId } = req.params;
+
+            const result = await StudentService.listSortedStudents(instituteId, sortBy, order, pageNo, 100);
 
             return res.json(result);
         } catch (err) {

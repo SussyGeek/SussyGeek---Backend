@@ -20,7 +20,14 @@ export type InstituteFetchQueryTypes = {
     page: string,
     name: string,
     limit: string
+    status: string
 };
+
+export type InstituteSearchQueryType = {
+    name: string,
+    limit: string,
+    status: string
+}
 
 export type ScoreAggreation = {
     rows: Partial<StudentRow>[];

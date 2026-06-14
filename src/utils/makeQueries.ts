@@ -3,7 +3,8 @@ import { Query } from "node-appwrite";
 export const makeQueries = (
     name: string,
     limit: number,
-    offset: number
+    offset: number,
+    status: string = 'all'
 ) => {
     let queries = [];
 
@@ -12,6 +13,10 @@ export const makeQueries = (
         queries.push(Query.offset(offset));
     } else {
         queries.push(Query.contains('name', name));
+    }
+    
+    if (status !== 'all') {
+        queries.push(Query.equal('status', status));
     }
     return queries;
 }

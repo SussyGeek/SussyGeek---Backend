@@ -39,13 +39,14 @@ const InstituteService = {
         page: number,
         limit: number,
         offset: number,
-        omitInfo = true
+        omitInfo = true,
+        status: string = 'all'
     ) => {
         let ans: Models.RowList<InstituteRow>;
         // TODO: Omit sensitive info like Institute ID and stuff.
-        if (name.trim() || !id.trim()) {
+        if (name.trim() || !id.trim() || status !== 'all') {
             const queries = makeQueries(
-                name, limit, offset
+                name, limit, offset, status
             );
             ans = await InstituteRepository.listInstitutes(queries);
         } else {
@@ -53,6 +54,9 @@ const InstituteService = {
             ans = { total: 1, rows: [instituteRow] };
         }
         return ans;
+    },
+    searchInstitutes: async (name: string, limit: number, status: string = 'all') => {
+        return await InstituteRepository.searchInstitutes(name, limit, status);
     },
     findAvailabilityById: async (instituteId: string) => {
         const row = await InstituteRepository.findAvailability(instituteId);

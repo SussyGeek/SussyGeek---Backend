@@ -14,6 +14,11 @@ router.get("/institute/:instituteId/list/regular",
     StudentController.listRegularStudents
 );
 
+router.get("/institute/:instituteId/list/sorted",
+    validate(StudentValidator.listSortedStudents),
+    StudentController.listSortedStudents
+);
+
 router.get('/list',
     validate(StudentValidator.listStudentsByUserId),
     StudentController.listStudentsByUserIds

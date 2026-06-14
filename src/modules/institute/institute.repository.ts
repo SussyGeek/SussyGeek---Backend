@@ -55,6 +55,20 @@ const InstituteRepository = {
             queries: queries,
         });
     },
+    searchInstitutes: async (name: string, limit: number, status: string = 'all'): Promise<Models.RowList<InstituteRow>> => {
+        const queries = [
+            Query.search('name', name),
+            Query.limit(limit)
+        ];
+        if (status !== 'all') {
+            queries.push(Query.equal('status', status));
+        }
+        return await database.listRows({
+            databaseId: appwriteConfig.databaseId,
+            tableId: appwriteConfig.institutionTableId,
+            queries: queries
+        });
+    },
     updateInstituteStudents: async (id: string, count: number, incr: boolean) => {
         if (incr) {
             return await database.incrementRowColumn({
