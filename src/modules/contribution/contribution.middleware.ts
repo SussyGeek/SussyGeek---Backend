@@ -14,8 +14,11 @@ const ContributionMiddlewares = {
 
             if (contributions.length > 0) {
                 contributions.forEach(c => {
-                    if (c.instituteId !== instituteId && c.assignedBlock !== ID_UNASSIGNED)
-                        throw new ApiError(403, "Existing scrapping instance is active.");
+                    if (c.instituteId !== instituteId) {
+                        const leaseActive = c.leaseExpiresAt - (Date.now() / 1000) >= 0;
+                        if (c.assignedBlock !== ID_UNASSIGNED && leaseActive)
+                            throw new ApiError(403, "Existing scrapping instance is active.");
+                    }
 
                     // TODO: Identify if this passed data is used elsewhere and remove if not.
                     if (c.assignedBlock !== ID_UNASSIGNED && c.instituteId === instituteId) {

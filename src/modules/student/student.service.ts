@@ -63,7 +63,7 @@ const StudentService = {
         if (showCounters === 1 && students.length > 0) {
             const studentIds = students.map(s => s.$id);
             const usersSerialized = await StudentRepository.redisSearchStudnetsOnHash(instituteId, studentIds);
-            
+
             // @ts-ignore
             students = students.map((s, i) => {
                 const serialized = usersSerialized[i];
@@ -79,6 +79,12 @@ const StudentService = {
             success: true,
             data: { students }
         };
+    },
+    listAllStudentsByInstituteId: async (
+        instituteId: string
+    ) => {
+        const { rows } = await StudentRepository.listAllByInstituteId(instituteId);
+        return rows;
     },
     listSortedStudents: async (
         instituteId: string,
@@ -149,11 +155,19 @@ const StudentService = {
     },
     updateStudentScores: async (
         instituteId: string,
-        institute: InstituteRow | null
+        institute: InstituteRow | null,
+        accessMode: "BLOCK_EXTENSION" | "SCORE_UPDATION" = "BLOCK_EXTENSION"
     ) => {
         institute = institute ?? (await InstituteService.getInstitute(instituteId, '', 1, 1, 0, false)).rows[0];
         if (institute.totalStudents !== institute.scrappedStudents) {
             throw new ApiError(409, "Institute has partial contributions. Can't be updated.");
+        }
+
+        const lastUpdateS = new Date(institute.$updatedAt).getTime() / 1000;
+        const currentS = Date.now() / 1000;
+
+        if (currentS - lastUpdateS <= 3600) {
+            throw new ApiError(403, "A recent update was issued.");
         }
 
         // Get fresh student list from GFG.
@@ -172,7 +186,7 @@ const StudentService = {
 
             serializedStudents.push(JSON.stringify({
                 username: s.handle,
-                user_id: s.user_id
+                user_id: s.user_id.toString()
             }));
         });
 
@@ -183,7 +197,7 @@ const StudentService = {
 
         const hashDataSerialized: Record<string, string> = {};
         const studentExists = await StudentRepository.redisScrappedMembershipCheck(instituteId, serializedStudents);
-        const { data: appwriteStudentRows } = await StudentService.listStudentsByUserIds(studentIds.all);
+        const appwriteStudentRows = await StudentService.listAllStudentsByInstituteId(institute.$id);
 
         const appwriteNameMap = new Map(appwriteStudentRows.map(row => [
             row.$id,
@@ -197,20 +211,20 @@ const StudentService = {
 
                 // This total data is computed for Institutional counter update
                 // And difference obtaining for metadata increment.
-                counterData.total.problemsSolved += s.total_problems_solved;
-                counterData.total.score += s.coding_score;
+                counterData.total.problemsSolved += s?.total_problems_solved ?? 0;
+                counterData.total.score += s?.coding_score ?? 0;
 
                 // For our Redis sets.
-                counterData.sets.scores.push({ score: s.coding_score, value: userIdStr });
-                counterData.sets.solved.push({ score: s.total_problems_solved, value: userIdStr });
-                counterData.sets.streak.push({ score: s.potd_longest_streak, value: userIdStr });
+                counterData.sets.scores.push({ score: s?.coding_score ?? 0, value: userIdStr });
+                counterData.sets.solved.push({ score: s?.total_problems_solved ?? 0, value: userIdStr });
+                counterData.sets.streak.push({ score: s?.potd_longest_streak ?? 0, value: userIdStr });
 
                 hashDataSerialized[userIdStr] = JSON.stringify({
                     username: s.handle,
                     name: appwriteNameMap.get(userIdStr) ?? s.handle,
-                    score: s.coding_score,
-                    solved: s.total_problems_solved,
-                    streak: s.potd_longest_streak
+                    score: s?.coding_score ?? 0,
+                    solved: s?.total_problems_solved ?? 0,
+                    streak: s?.potd_longest_streak ?? 0
                 });
             } else {
                 newStudentsList.push(s);
@@ -218,18 +232,17 @@ const StudentService = {
         });
 
         const counterDifference = {
-            totalScore: counterData.total.score - institute.score,
-            totalProblems: counterData.total.problemsSolved - institute.problemsSolved
+            totalScore: counterData.total?.score ?? 0 - institute.score,
+            totalProblems: counterData.total?.problemsSolved ?? 0 - institute.problemsSolved
         };
         await MetaService.incrementDifference(counterDifference);
-
         await InstituteService.updateScoreAndProblems(instituteId, counterData.total);
         await StudentRepository.redisUpdateScores(instituteId, counterData.sets, hashDataSerialized);
 
         return {
             success: true,
             message: "Score updated",
-            newStudentsList,
+            newStudentsList: accessMode === "BLOCK_EXTENSION" ? newStudentsList : [],
         };
     }
 };

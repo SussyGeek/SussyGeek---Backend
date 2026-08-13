@@ -1,4 +1,4 @@
-import { Models, Query } from "node-appwrite";
+import { Models } from "node-appwrite";
 import { AddInstituteSvcType } from "../../types/institute";
 import { prepInstitutionObject } from "../../utils/prepInstituteObject";
 import InstituteRepository from "./institute.repository";
@@ -62,7 +62,8 @@ const InstituteService = {
         const row = await InstituteRepository.findAvailability(instituteId);
         return row.scrappedStudents === row.totalStudents;
     },
-    // updates counter for totalStudents
+    // This is not used for a route. When an institute is
+    // scrapped for first time, a student count update is performed.
     updateTotalStudents: async (instId: string) => {
 
         const institute = (await InstituteService.getInstitute(instId, '', 1, 1, 1)).rows[0] ?? null;
@@ -72,7 +73,7 @@ const InstituteService = {
         const lastUpdate = new Date(institute.$updatedAt).getTime();
         const updateHourDiff = (Date.now() - lastUpdate) / (3600 * 1000);
 
-        const newStudentCount = 0; // TODO: Fetch institute count from GFG API;
+        const newStudentCount = await GeeksForGeeksAPI.getTotalStudentCount(institute.$id)
         const difference = newStudentCount - institute.totalStudents;
 
         if (updateHourDiff >= 1 && difference != 0) {
@@ -88,7 +89,7 @@ const InstituteService = {
         return {
             success: true,
             message: updateHourDiff >= 1 ?
-                "Updated" : "A recent update was found."
+                "Updated" : "Institute was recently updated."
         }
     },
     updateBlockPagesAndState: async (
@@ -209,6 +210,9 @@ const InstituteService = {
     ) => {
         const institute = (await InstituteService.getInstitute(instituteId, '', 1, 1, 0, false)).rows[0];
 
+        if (!institute)
+            throw new ApiError(404, "Institute ID is invalid.");
+
         if (institute.totalStudents !== institute.scrappedStudents)
             return { success: false, message: "Partial contributions. Not updatable" };
 
@@ -254,7 +258,7 @@ const InstituteService = {
             }
         );
 
-        return { success: true, message: "Institute blocks extended" };
+        return { success: true, message: "Institute students updated." };
     }
 };
 

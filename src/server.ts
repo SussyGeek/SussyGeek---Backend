@@ -1,8 +1,11 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import http from "http";
 import appRoutes from "./routes";
 import ErrorHandler from "./middlewares/error.middleware";
+
+import { initializeChatWebSocket } from "./modules/chat/chat.websocket";
 
 dotenv.config();
 
@@ -38,6 +41,9 @@ app.use('/api/v1', appRoutes);
 
 app.use(ErrorHandler);
 
-app.listen(PORT, () => {
-    console.log(`Listening to ${PORT}`)
+const server = http.createServer(app);
+initializeChatWebSocket(server);
+
+server.listen(PORT, () => {
+    console.log(`Listening on ${PORT}`);
 });

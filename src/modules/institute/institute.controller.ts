@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import InstituteService from "./institute.service";
 import { InstitutionBody } from "../../types/body";
 import { InstituteFetchQueryTypes, InstituteSearchQueryType } from "../../types/institute";
+import StudentService from "../student/student.service";
 
 const instituteController = {
     addInstitute: async (req: Request, res: Response, next: NextFunction) => {
@@ -75,7 +76,6 @@ const instituteController = {
     findAvailabilityById: async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { instituteId } = req.params as unknown as { instituteId: string };
-            console.log(instituteId);
             const data = await InstituteService.findAvailabilityById(instituteId);
             return res.json({
                 success: true,
@@ -89,6 +89,15 @@ const instituteController = {
         try {
             const { id } = req.params;
             const result = await InstituteService.updateTotalStudents(id);
+            return res.json(result);
+        } catch (err) {
+            next(err);
+        }
+    },
+    updateStudentScores: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { id } = req.params;
+            const result = await StudentService.updateStudentScores(id, null, "SCORE_UPDATION");
             return res.json(result);
         } catch (err) {
             next(err);

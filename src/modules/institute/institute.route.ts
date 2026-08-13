@@ -5,14 +5,6 @@ import instituteController from './institute.controller';
 
 const router = express.Router();
 
-// This endpoint will be removed in future!
-// router.post('/add',
-//     validate(InstituteValidator.addInstitute),
-//     // TODO: New middleware that checks if institute exists.
-//     instituteController.addInstitute
-// );
-
-
 router.get('/list',
     validate(InstituteValidator.getInstitute),
     instituteController.getInstitute
@@ -27,11 +19,11 @@ router.get('/availability/:instituteId',
 );
 
 
-// This is unused for now. TODO: Decide on it in future. -- OLD COMMENT
 // This is anti architectural as we'll only update student count when frozen list is fully scrapped -- NEW COMMENT
+// This is dev route, considering above ^^
 router.patch('/update/:id/total_students',
     validate(InstituteValidator.updateTotalStudents),
-    instituteController.updateStudentCount
+    instituteController.updateStudentScores
 );
 
 export default router;
