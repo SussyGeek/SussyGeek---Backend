@@ -5,7 +5,7 @@ import MetaController from "./meta.controller";
 
 const router = express.Router();
 
-router.get('/counters/:field', 
+router.get('/counters/:field',
     validate(MetaValidator.getCounters),
     MetaController.getCounters
 );
