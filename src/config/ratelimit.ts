@@ -14,5 +14,5 @@ export const RATE_LIMITS = {
     DATA_FETCH: { maxRequests: 5, windowMs: 3_000, strategy: "user" },
     META_COUNTERS: { maxRequests: 5, windowMs: 3_000, strategy: "non-user" },
     DEV_MUTATION: { maxRequests: 2, windowMs: 30_000, strategy: "non-user" },
-    HANDLE_AUTH: { maxRequests: 3, windowMs: 120_000, strategy: "user" }
+    HANDLE_AUTH: { maxRequests: 6, windowMs: 9_000, strategy: "user" }
 } as const satisfies Record<string, RateLimitConfig>;

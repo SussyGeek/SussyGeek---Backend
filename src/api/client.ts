@@ -15,4 +15,4 @@ gfgClient.interceptors.response.use(
     }
 );
 
-export const GfgClient: GfgApiClient = gfgClient;
+export const GfgClient = gfgClient as unknown as GfgApiClient;

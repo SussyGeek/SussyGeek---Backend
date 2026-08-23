@@ -6,6 +6,7 @@ import appRoutes from "./routes";
 import ErrorHandler from "./middlewares/error.middleware";
 
 import { initializeChatWebSocket } from "./modules/chat/chat.websocket";
+import { initializeFields } from "./middlewares/fields.middleware";
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ app.use(cors(
     }
 ));
 app.use(express.json());
+app.use(initializeFields);
 
 // Routes
 app.use('/api/v1', appRoutes);
