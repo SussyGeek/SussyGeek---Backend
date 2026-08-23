@@ -1,14 +1,9 @@
 import type { Request, Response, NextFunction } from "express";
 import { ApiError } from "../errors/ApiError";
+import type { RateLimitConfig } from "../config/ratelimit";
 
-type RateLimitConfig = {
-    maxRequests: number;
-    windowMs: number;
-    strategy: "user" | "non-user"
-};
-
-const rateLimits = new Map<string, number[]>();
-const rateLimitByIP = new Map<string, number[]>();
+export const rateLimits = new Map<string, number[]>();
+export const rateLimitByIP = new Map<string, number[]>();
 
 export function rateLimit({
     maxRequests,
